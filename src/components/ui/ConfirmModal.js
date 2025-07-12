@@ -1,12 +1,7 @@
-/*
-* =================================================================
-* FILE: src/components/ui/ConfirmModal.js
-* =================================================================
-*/
 import React from 'react';
-import { Modal } from './Modal';
+import Modal from './Modal';
 
-export const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
     if (!isOpen) return null;
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={title}>
@@ -22,3 +17,5 @@ export const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => 
         </Modal>
     );
 };
+
+export default ConfirmModal;

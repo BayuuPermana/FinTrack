@@ -1,11 +1,6 @@
-/*
-* =================================================================
-* FILE: src/components/forms/GoalForm.js
-* =================================================================
-*/
 import React, { useState, useEffect } from 'react';
 
-export const GoalForm = ({ goal, onSave, onCancel }) => {
+const GoalForm = ({ goal, onSave, onCancel }) => {
     const [name, setName] = useState('');
     const [targetAmount, setTargetAmount] = useState('');
     const [currentAmount, setCurrentAmount] = useState('0');
@@ -48,3 +43,5 @@ export const GoalForm = ({ goal, onSave, onCancel }) => {
         </form>
     );
 };
+
+export default GoalForm;

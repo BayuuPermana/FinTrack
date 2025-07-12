@@ -1,0 +1,1114 @@
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
+import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, query } from 'firebase/firestore';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ArrowUpRight, ArrowDownLeft, Target, Home, List, PieChart as PieChartIcon, Settings, PlusCircle, Trash2, Edit, X, CalendarDays, Bell } from 'lucide-react';
+
+// =================================================================
+// FIREBASE CONFIG
+// =================================================================
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-budget-app';
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// =================================================================
+// UTILS
+// =================================================================
+const formatCurrency = (amount) => {
+    if (typeof amount !== 'number') {
+        amount = 0;
+    }
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(amount);
+};
+
+// =================================================================
+// CONTEXTS
+// =================================================================
+
+// --- Auth Context ---
+const AuthContext = createContext(null);
+const useAuth = () => useContext(AuthContext);
+
+const AuthProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const attemptSignIn = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Authentication Error:", error);
+            }
+        };
+
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setLoading(false);
+        });
+
+        attemptSignIn();
+        return () => unsubscribe();
+    }, []);
+
+    return (
+        <AuthContext.Provider value={{ user, loading }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+// --- Data Context ---
+const DataContext = createContext(null);
+const useData = () => useContext(DataContext);
+
+const DataProvider = ({ children }) => {
+    const { user } = useAuth();
+    const [transactions, setTransactions] = useState([]);
+    const [goals, setGoals] = useState([]);
+    const [bills, setBills] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (user) {
+            setLoading(true);
+            const collections = {
+                transactions: collection(db, `artifacts/${appId}/users/${user.uid}/transactions`),
+                goals: collection(db, `artifacts/${appId}/users/${user.uid}/goals`),
+                bills: collection(db, `artifacts/${appId}/users/${user.uid}/bills`),
+            };
+
+            const unsubscribes = Object.entries(collections).map(([name, coll]) => {
+                const q = query(coll);
+                return onSnapshot(q, (snapshot) => {
+                    const data = snapshot.docs.map(doc => {
+                        const docData = doc.data();
+                        const convertedData = Object.keys(docData).reduce((acc, key) => {
+                            if (docData[key]?.toDate) {
+                                acc[key] = docData[key].toDate();
+                            } else {
+                                acc[key] = docData[key];
+                            }
+                            return acc;
+                        }, {});
+                        return { id: doc.id, ...convertedData };
+                    });
+
+                    switch (name) {
+                        case 'transactions': setTransactions(data); break;
+                        case 'goals': setGoals(data); break;
+                        case 'bills': setBills(data); break;
+                        default: break;
+                    }
+                }, error => console.error(`Error fetching ${name}:`, error));
+            });
+            
+            setLoading(false);
+            return () => unsubscribes.forEach(unsub => unsub());
+        } else {
+            setTransactions([]);
+            setGoals([]);
+            setBills([]);
+            setLoading(false);
+        }
+    }, [user]);
+
+    const createItem = (collectionName) => async (item) => {
+        if (!user) return;
+        await addDoc(collection(db, `artifacts/${appId}/users/${user.uid}/${collectionName}`), item);
+    };
+
+    const updateItem = (collectionName) => async (id, updatedItem) => {
+        if (!user) return;
+        await updateDoc(doc(db, `artifacts/${appId}/users/${user.uid}/${collectionName}`, id), updatedItem);
+    };
+
+    const deleteItem = (collectionName) => async (id) => {
+        if (!user) return;
+        await deleteDoc(doc(db, `artifacts/${appId}/users/${user.uid}/${collectionName}`, id));
+    };
+
+    const addTransaction = createItem('transactions');
+    const updateTransaction = updateItem('transactions');
+    const deleteTransaction = deleteItem('transactions');
+    const addGoal = createItem('goals');
+    const updateGoal = updateItem('goals');
+    const deleteGoal = deleteItem('goals');
+    const addBill = createItem('bills');
+    const updateBill = updateItem('bills');
+    const deleteBill = deleteItem('bills');
+
+    const addFundsToGoal = async (goalId, amount) => {
+        if (!user) return;
+        const goal = goals.find(g => g.id === goalId);
+        if(goal) {
+            const newCurrentAmount = (goal.currentAmount || 0) + amount;
+            await updateGoal(goalId, { currentAmount: newCurrentAmount });
+        }
+    };
+
+    const toggleBillPaidStatus = async (billId, isPaid) => {
+        if(!user) return;
+        await updateBill(billId, { isPaid });
+    };
+
+    const value = { 
+        transactions, goals, bills, 
+        addTransaction, updateTransaction, deleteTransaction, 
+        addGoal, updateGoal, deleteGoal, addFundsToGoal,
+        addBill, updateBill, deleteBill, toggleBillPaidStatus,
+        loading 
+    };
+
+    return (
+        <DataContext.Provider value={value}>
+            {children}
+        </DataContext.Provider>
+    );
+};
+
+// =================================================================
+// UI COMPONENTS
+// =================================================================
+const Card = ({ children, className = '' }) => (
+    <div className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg ${className}`}>
+        {children}
+    </div>
+);
+
+const Modal = ({ isOpen, onClose, title, children }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4 backdrop-blur-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md m-4 transform transition-all scale-95 hover:scale-100" >
+                <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white">{title}</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <X size={24} />
+                    </button>
+                </div>
+                <div className="p-6">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+    if (!isOpen) return null;
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title={title}>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">{message}</p>
+            <div className="flex justify-end space-x-3">
+                <button onClick={onClose} className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">
+                    Cancel
+                </button>
+                <button onClick={onConfirm} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    Confirm
+                </button>
+            </div>
+        </Modal>
+    );
+};
+
+const Spinner = () => (
+    <div className="flex justify-center items-center h-full py-16">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
+    </div>
+);
+
+// =================================================================
+// FORM COMPONENTS
+// =================================================================
+const TransactionForm = ({ transaction, onSave, onCancel }) => {
+    const [type, setType] = useState('expense');
+    const [amount, setAmount] = useState('');
+    const [category, setCategory] = useState('');
+    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [description, setDescription] = useState('');
+
+    useEffect(() => {
+        if (transaction) {
+            setType(transaction.type);
+            setAmount(transaction.amount);
+            setCategory(transaction.category);
+            setDate(new Date(transaction.date).toISOString().split('T')[0]);
+            setDescription(transaction.description);
+        } else {
+            setType('expense');
+            setAmount('');
+            setCategory('');
+            setDate(new Date().toISOString().split('T')[0]);
+            setDescription('');
+        }
+    }, [transaction]);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave({ type, amount: parseFloat(amount), category, date: new Date(date), description });
+    };
+
+    const expenseCategories = ["Groceries", "Rent", "Utilities", "Transport", "Entertainment", "Health", "Other"];
+    const incomeCategories = ["Salary", "Bonus", "Freelance", "Investment", "Other"];
+    const categories = type === 'expense' ? expenseCategories : incomeCategories;
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                <div className="flex space-x-2">
+                    <button type="button" onClick={() => { setType('expense'); setCategory(''); }} className={`w-full py-2 rounded-lg ${type === 'expense' ? 'bg-red-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Expense</button>
+                    <button type="button" onClick={() => { setType('income'); setCategory(''); }} className={`w-full py-2 rounded-lg ${type === 'income' ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Income</button>
+                </div>
+            </div>
+            <div>
+                <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                <input type="number" id="amount" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required />
+            </div>
+            <div>
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                <select id="category" value={category} onChange={e => setCategory(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required>
+                    <option value="">Select a category</option>
+                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+            </div>
+            <div>
+                <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                <input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required />
+            </div>
+            <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                <input type="text" id="description" value={description} onChange={e => setDescription(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required />
+            </div>
+            <div className="flex justify-end space-x-3 pt-4">
+                <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Save</button>
+            </div>
+        </form>
+    );
+};
+
+const GoalForm = ({ goal, onSave, onCancel }) => {
+    const [name, setName] = useState('');
+    const [targetAmount, setTargetAmount] = useState('');
+    const [currentAmount, setCurrentAmount] = useState('0');
+
+    useEffect(() => {
+        if (goal) {
+            setName(goal.name);
+            setTargetAmount(goal.targetAmount);
+            setCurrentAmount(goal.currentAmount || 0);
+        } else {
+            setName('');
+            setTargetAmount('');
+            setCurrentAmount('0');
+        }
+    }, [goal]);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave({ name, targetAmount: parseFloat(targetAmount), currentAmount: parseFloat(currentAmount) });
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+                <label htmlFor="goal-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Goal Name</label>
+                <input type="text" id="goal-name" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required />
+            </div>
+            <div>
+                <label htmlFor="target-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Target Amount</label>
+                <input type="number" id="target-amount" value={targetAmount} onChange={e => setTargetAmount(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required />
+            </div>
+            <div>
+                <label htmlFor="current-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Current Amount</label>
+                <input type="number" id="current-amount" value={currentAmount} onChange={e => setCurrentAmount(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required />
+            </div>
+            <div className="flex justify-end space-x-3 pt-4">
+                <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Save Goal</button>
+            </div>
+        </form>
+    );
+};
+
+const AddFundsForm = ({ onAdd, onCancel }) => {
+    const [amount, setAmount] = useState('');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onAdd(parseFloat(amount));
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+                <label htmlFor="fund-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount to Add</label>
+                <input type="number" id="fund-amount" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required autoFocus/>
+            </div>
+            <div className="flex justify-end space-x-3 pt-4">
+                <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Add Funds</button>
+            </div>
+        </form>
+    );
+};
+
+const BillForm = ({ bill, onSave, onCancel }) => {
+    const [name, setName] = useState('');
+    const [amount, setAmount] = useState('');
+    const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
+    const [category, setCategory] = useState('');
+    const [isRecurring, setIsRecurring] = useState(false);
+
+    useEffect(() => {
+        if (bill) {
+            setName(bill.name);
+            setAmount(bill.amount);
+            setDueDate(new Date(bill.dueDate).toISOString().split('T')[0]);
+            setCategory(bill.category);
+            setIsRecurring(bill.isRecurring || false);
+        } else {
+            setName('');
+            setAmount('');
+            setDueDate(new Date().toISOString().split('T')[0]);
+            setCategory('');
+            setIsRecurring(false);
+        }
+    }, [bill]);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave({ name, amount: parseFloat(amount), dueDate: new Date(dueDate), category, isRecurring, isPaid: bill ? bill.isPaid : false });
+    };
+
+    const categories = ["Rent", "Utilities", "Subscription", "Loan", "Insurance", "Other"];
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+                <label htmlFor="bill-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Bill Name</label>
+                <input type="text" id="bill-name" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required />
+            </div>
+            <div>
+                <label htmlFor="bill-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                <input type="number" id="bill-amount" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required />
+            </div>
+            <div>
+                <label htmlFor="bill-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                <select id="bill-category" value={category} onChange={e => setCategory(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required>
+                    <option value="">Select a category</option>
+                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+            </div>
+            <div>
+                <label htmlFor="bill-due-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Due Date</label>
+                <input type="date" id="bill-due-date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm" required />
+            </div>
+            <div className="flex items-center">
+                <input id="is-recurring" type="checkbox" checked={isRecurring} onChange={e => setIsRecurring(e.target.checked)} className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+                <label htmlFor="is-recurring" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">This is a recurring bill</label>
+            </div>
+            <div className="flex justify-end space-x-3 pt-4">
+                <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Save Bill</button>
+            </div>
+        </form>
+    );
+};
+
+// =================================================================
+// PAGE COMPONENTS
+// =================================================================
+const Dashboard = () => {
+    const { transactions, goals, bills, loading } = useData();
+
+    if (loading) return <Spinner />;
+
+    const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+    const totalExpense = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+    const balance = totalIncome - totalExpense;
+
+    const expenseByCategory = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((acc, t) => {
+            acc[t.category] = (acc[t.category] || 0) + t.amount;
+            return acc;
+        }, {});
+
+    const pieData = Object.entries(expenseByCategory).map(([name, value]) => ({ name, value }));
+    const COLORS = ['#4f46e5', '#7c3aed', '#a855f7', '#d946ef', '#ec4899', '#f472b6'];
+
+    const recentTransactions = [...transactions].sort((a, b) => b.date - a.date).slice(0, 5);
+    const upcomingBills = [...bills]
+        .filter(b => !b.isPaid && new Date(b.dueDate) >= new Date())
+        .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+        .slice(0, 3);
+
+    return (
+        <div className="space-y-6">
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                 <Card className="bg-gradient-to-br from-green-400 to-green-600 text-white">
+                    <div className="flex items-center space-x-4">
+                        <div className="bg-white/20 p-3 rounded-full"><ArrowUpRight size={24} /></div>
+                        <div>
+                            <p className="text-lg">Total Income</p>
+                            <p className="text-3xl font-bold">{formatCurrency(totalIncome)}</p>
+                        </div>
+                    </div>
+                </Card>
+                <Card className="bg-gradient-to-br from-red-400 to-red-600 text-white">
+                    <div className="flex items-center space-x-4">
+                        <div className="bg-white/20 p-3 rounded-full"><ArrowDownLeft size={24} /></div>
+                        <div>
+                            <p className="text-lg">Total Expense</p>
+                            <p className="text-3xl font-bold">{formatCurrency(totalExpense)}</p>
+                        </div>
+                    </div>
+                </Card>
+                <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                    <div className="flex items-center space-x-4">
+                        <div className="bg-white/20 p-3 rounded-full flex items-center justify-center w-12 h-12">
+                            <span className="text-2xl font-bold">Rp</span>
+                        </div>
+                        <div>
+                            <p className="text-lg">Balance</p>
+                            <p className="text-3xl font-bold">{formatCurrency(balance)}</p>
+                        </div>
+                    </div>
+                </Card>
+                <Card className="bg-gradient-to-br from-yellow-400 to-orange-500 text-white">
+                    <div className="flex items-center space-x-4">
+                        <div className="bg-white/20 p-3 rounded-full"><Bell size={24} /></div>
+                        <div>
+                            <p className="text-lg">Upcoming Bills</p>
+                            <p className="text-3xl font-bold">{upcomingBills.length}</p>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <Card className="lg:col-span-2">
+                    <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Expense by Category</h2>
+                    {pieData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label>
+                                    {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                </Pie>
+                                <Tooltip formatter={(value) => formatCurrency(value)} />
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <p className="text-center text-gray-500 dark:text-gray-400 py-12">No expense data to display.</p>
+                    )}
+                </Card>
+                <Card className="lg:col-span-3">
+                    <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Recent Transactions</h2>
+                    <div className="space-y-3">
+                        {recentTransactions.length > 0 ? recentTransactions.map(t => (
+                            <div key={t.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <div className="flex items-center space-x-3">
+                                    <div className={`p-2 rounded-full ${t.type === 'income' ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300' : 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300'}`}>
+                                        {t.type === 'income' ? <ArrowUpRight size={16} /> : <ArrowDownLeft size={16} />}
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-gray-800 dark:text-gray-100">{t.description}</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">{t.date.toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                                <p className={`font-bold ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                    {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                                </p>
+                            </div>
+                        )) : <p className="text-center text-gray-500 dark:text-gray-400 py-12">No recent transactions.</p>}
+                    </div>
+                </Card>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                    <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Financial Goals</h2>
+                    <div className="space-y-4">
+                        {goals.length > 0 ? goals.slice(0,3).map(goal => (
+                            <div key={goal.id}>
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="font-semibold text-gray-700 dark:text-gray-200">{goal.name}</span>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">{formatCurrency(goal.currentAmount || 0)} / {formatCurrency(goal.targetAmount)}</span>
+                                </div>
+                                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+                                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 h-4 rounded-full" style={{ width: `${((goal.currentAmount || 0) / goal.targetAmount) * 100}%` }}></div>
+                                </div>
+                            </div>
+                        )) : <p className="text-center text-gray-500 dark:text-gray-400 py-8">You haven't set any goals yet.</p>}
+                    </div>
+                </Card>
+                <Card>
+                    <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Upcoming Bills</h2>
+                    <div className="space-y-3">
+                        {upcomingBills.length > 0 ? upcomingBills.map(bill => (
+                            <div key={bill.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <div>
+                                    <p className="font-semibold text-gray-800 dark:text-gray-100">{bill.name}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Due: {new Date(bill.dueDate).toLocaleDateString()}</p>
+                                </div>
+                                <p className="font-bold text-orange-500">{formatCurrency(bill.amount)}</p>
+                            </div>
+                        )) : <p className="text-center text-gray-500 dark:text-gray-400 py-8">No upcoming bills. You're all caught up!</p>}
+                    </div>
+                </Card>
+            </div>
+        </div>
+    );
+};
+
+const TransactionsPage = () => {
+    const { transactions, addTransaction, updateTransaction, deleteTransaction, loading } = useData();
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [isConfirmOpen, setConfirmOpen] = useState(false);
+    const [editingTransaction, setEditingTransaction] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
+
+    const handleOpenModal = (transaction = null) => {
+        setEditingTransaction(transaction);
+        setModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setEditingTransaction(null);
+        setModalOpen(false);
+    };
+
+    const handleSaveTransaction = async (transaction) => {
+        if (editingTransaction) {
+            await updateTransaction(editingTransaction.id, transaction);
+        } else {
+            await addTransaction(transaction);
+        }
+        handleCloseModal();
+    };
+
+    const openConfirmDelete = (id) => {
+        setDeletingId(id);
+        setConfirmOpen(true);
+    };
+
+    const handleDelete = async () => {
+        if (deletingId) {
+            await deleteTransaction(deletingId);
+        }
+        setConfirmOpen(false);
+        setDeletingId(null);
+    };
+
+    const sortedTransactions = [...transactions].sort((a, b) => b.date - a.date);
+
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Transactions</h1>
+                <button onClick={() => handleOpenModal()} className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-lg">
+                    <PlusCircle size={20} />
+                    <span>Add Transaction</span>
+                </button>
+            </div>
+
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingTransaction ? "Edit Transaction" : "Add Transaction"}>
+                <TransactionForm transaction={editingTransaction} onSave={handleSaveTransaction} onCancel={handleCloseModal} />
+            </Modal>
+            <ConfirmModal 
+                isOpen={isConfirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                onConfirm={handleDelete}
+                title="Delete Transaction"
+                message="Are you sure you want to delete this transaction? This action cannot be undone."
+            />
+
+            <Card>
+                {loading ? <Spinner /> : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="border-b border-gray-200 dark:border-gray-700">
+                                <tr>
+                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Date</th>
+                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Description</th>
+                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Category</th>
+                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300 text-right">Amount</th>
+                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sortedTransactions.length > 0 ? sortedTransactions.map(t => (
+                                    <tr key={t.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td className="p-4 text-gray-700 dark:text-gray-300">{t.date.toLocaleDateString()}</td>
+                                        <td className="p-4 font-medium text-gray-900 dark:text-white">{t.description}</td>
+                                        <td className="p-4 text-gray-700 dark:text-gray-300">{t.category}</td>
+                                        <td className={`p-4 font-bold text-right ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                                            {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <div className="flex justify-center space-x-2">
+                                                <button onClick={() => handleOpenModal(t)} className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"><Edit size={18} /></button>
+                                                <button onClick={() => openConfirmDelete(t.id)} className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"><Trash2 size={18} /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan="5" className="text-center p-8 text-gray-500 dark:text-gray-400">No transactions found.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </Card>
+        </div>
+    );
+};
+
+const GoalsPage = () => {
+    const { goals, addGoal, updateGoal, deleteGoal, addFundsToGoal, loading } = useData();
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [editingGoal, setEditingGoal] = useState(null);
+    const [isFundsModalOpen, setFundsModalOpen] = useState(false);
+    const [fundingGoal, setFundingGoal] = useState(null);
+    const [isConfirmOpen, setConfirmOpen] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
+
+    const handleOpenModal = (goal = null) => {
+        setEditingGoal(goal);
+        setModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setEditingGoal(null);
+        setModalOpen(false);
+    };
+    
+    const handleOpenFundsModal = (goal) => {
+        setFundingGoal(goal);
+        setFundsModalOpen(true);
+    };
+    
+    const handleCloseFundsModal = () => {
+        setFundingGoal(null);
+        setFundsModalOpen(false);
+    };
+
+    const handleSaveGoal = async (goal) => {
+        if (editingGoal) {
+            await updateGoal(editingGoal.id, goal);
+        } else {
+            await addGoal(goal);
+        }
+        handleCloseModal();
+    };
+
+    const openConfirmDelete = (id) => {
+        setDeletingId(id);
+        setConfirmOpen(true);
+    };
+
+    const handleDelete = async () => {
+        if(deletingId) {
+            await deleteGoal(deletingId);
+        }
+        setConfirmOpen(false);
+        setDeletingId(null);
+    };
+    
+    const handleAddFunds = async (amount) => {
+        if(fundingGoal && amount > 0) {
+            await addFundsToGoal(fundingGoal.id, amount);
+        }
+        handleCloseFundsModal();
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Financial Goals</h1>
+                <button onClick={() => handleOpenModal()} className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-lg">
+                    <PlusCircle size={20} />
+                    <span>New Goal</span>
+                </button>
+            </div>
+
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingGoal ? "Edit Goal" : "Add New Goal"}>
+                <GoalForm goal={editingGoal} onSave={handleSaveGoal} onCancel={handleCloseModal} />
+            </Modal>
+            
+            <Modal isOpen={isFundsModalOpen} onClose={handleCloseFundsModal} title={`Add Funds to "${fundingGoal?.name}"`}>
+                <AddFundsForm onAdd={handleAddFunds} onCancel={handleCloseFundsModal} />
+            </Modal>
+
+            <ConfirmModal 
+                isOpen={isConfirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                onConfirm={handleDelete}
+                title="Delete Goal"
+                message="Are you sure you want to delete this goal? This action cannot be undone."
+            />
+
+            {loading ? <Spinner /> : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {goals.length > 0 ? goals.map(goal => {
+                        const progress = goal.targetAmount > 0 ? ((goal.currentAmount || 0) / goal.targetAmount) * 100 : 0;
+                        return (
+                            <Card key={goal.id} className="flex flex-col justify-between">
+                                <div>
+                                    <div className="flex justify-between items-start">
+                                        <h2 className="text-xl font-bold text-gray-800 dark:text-white">{goal.name}</h2>
+                                        <div className="flex space-x-2">
+                                           <button onClick={() => handleOpenModal(goal)} className="text-gray-400 hover:text-indigo-500"><Edit size={18} /></button>
+                                           <button onClick={() => openConfirmDelete(goal.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={18} /></button>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Target: {formatCurrency(goal.targetAmount)}</p>
+                                    
+                                    <div className="space-y-2 mb-4">
+                                        <div className="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-300">
+                                            <span>Progress</span>
+                                            <span>{progress.toFixed(1)}%</span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                                            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full" style={{ width: `${progress}%` }}></div>
+                                        </div>
+                                        <p className="text-right text-sm text-gray-500 dark:text-gray-400">{formatCurrency(goal.currentAmount || 0)} saved</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => handleOpenFundsModal(goal)} className="w-full mt-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                    Add Funds
+                                </button>
+                            </Card>
+                        );
+                    }) : (
+                        <Card className="md:col-span-2 lg:col-span-3 text-center py-16">
+                            <p className="text-gray-500 dark:text-gray-400">You haven't set any financial goals yet. Click "New Goal" to start!</p>
+                        </Card>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const BillsPage = () => {
+    const { bills, addBill, updateBill, deleteBill, toggleBillPaidStatus, loading } = useData();
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [editingBill, setEditingBill] = useState(null);
+    const [isConfirmOpen, setConfirmOpen] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
+
+    const handleOpenModal = (bill = null) => {
+        setEditingBill(bill);
+        setModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setEditingBill(null);
+        setModalOpen(false);
+    };
+
+    const handleSaveBill = async (bill) => {
+        if (editingBill) {
+            await updateBill(editingBill.id, bill);
+        } else {
+            await addBill(bill);
+        }
+        handleCloseModal();
+    };
+
+    const openConfirmDelete = (id) => {
+        setDeletingId(id);
+        setConfirmOpen(true);
+    };
+
+    const handleDelete = async () => {
+        if (deletingId) {
+            await deleteBill(deletingId);
+        }
+        setConfirmOpen(false);
+        setDeletingId(null);
+    };
+
+    const handlePayBill = async (bill) => {
+        await toggleBillPaidStatus(bill.id, !bill.isPaid);
+        if (bill.isRecurring && !bill.isPaid) {
+            const newDueDate = new Date(bill.dueDate);
+            newDueDate.setMonth(newDueDate.getMonth() + 1);
+            const nextBill = { ...bill, dueDate: newDueDate, isPaid: false };
+            delete nextBill.id;
+            await addBill(nextBill);
+        }
+    };
+
+    const upcomingBills = bills.filter(b => !b.isPaid).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    const paidBills = bills.filter(b => b.isPaid).sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate));
+
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Bill Management</h1>
+                <button onClick={() => handleOpenModal()} className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-lg">
+                    <PlusCircle size={20} />
+                    <span>Add Bill</span>
+                </button>
+            </div>
+
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingBill ? "Edit Bill" : "Add New Bill"}>
+                <BillForm bill={editingBill} onSave={handleSaveBill} onCancel={handleCloseModal} />
+            </Modal>
+            <ConfirmModal 
+                isOpen={isConfirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                onConfirm={handleDelete}
+                title="Delete Bill"
+                message="Are you sure you want to delete this bill? This action cannot be undone."
+            />
+
+            {loading ? <Spinner /> : (
+                <div className="space-y-8">
+                    <Card>
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Upcoming Bills</h2>
+                        {upcomingBills.length > 0 ? (
+                            <div className="space-y-4">
+                                {upcomingBills.map(bill => (
+                                    <div key={bill.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                        <div className="flex items-center space-x-4">
+                                            <button onClick={() => handlePayBill(bill)} className="w-6 h-6 border-2 border-orange-500 rounded-full flex-shrink-0"></button>
+                                            <div>
+                                                <p className="font-semibold text-gray-900 dark:text-white">{bill.name}</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">{bill.category} {bill.isRecurring && "(Recurring)"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center space-x-4">
+                                            <div className="text-right">
+                                                <p className="font-bold text-lg text-orange-500">{formatCurrency(bill.amount)}</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Due: {new Date(bill.dueDate).toLocaleDateString()}</p>
+                                            </div>
+                                            <button onClick={() => handleOpenModal(bill)} className="text-gray-400 hover:text-indigo-500"><Edit size={18} /></button>
+                                            <button onClick={() => openConfirmDelete(bill.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={18} /></button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <p className="text-center text-gray-500 dark:text-gray-400 py-8">No upcoming bills. Great job!</p>}
+                    </Card>
+                    <Card>
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Paid Bills</h2>
+                         {paidBills.length > 0 ? (
+                            <div className="space-y-4">
+                                {paidBills.map(bill => (
+                                    <div key={bill.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg opacity-60">
+                                        <div className="flex items-center space-x-4">
+                                            <button onClick={() => handlePayBill(bill)} className="w-6 h-6 border-2 border-green-500 bg-green-500 rounded-full flex-shrink-0 flex items-center justify-center text-white">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                            </button>
+                                            <div>
+                                                <p className="font-semibold text-gray-900 dark:text-white line-through">{bill.name}</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">{bill.category}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="font-bold text-lg text-green-500 line-through">{formatCurrency(bill.amount)}</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Paid: {new Date(bill.dueDate).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <p className="text-center text-gray-500 dark:text-gray-400 py-8">No paid bills recorded yet.</p>}
+                    </Card>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const ReportsPage = () => {
+    const { transactions, loading } = useData();
+
+    if (loading) return <Spinner />;
+
+    const monthlyData = transactions.reduce((acc, t) => {
+        const month = new Date(t.date).toLocaleString('default', { month: 'short', year: 'numeric' });
+        if (!acc[month]) {
+            acc[month] = { income: 0, expense: 0, name: month };
+        }
+        if (t.type === 'income') {
+            acc[month].income += t.amount;
+        } else {
+            acc[month].expense += t.amount;
+        }
+        return acc;
+    }, {});
+
+    const chartData = Object.values(monthlyData).sort((a,b) => new Date(a.name) - new Date(b.name));
+
+    return (
+        <div className="space-y-6">
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Reports</h1>
+            <Card>
+                <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Monthly Cash Flow</h2>
+                {chartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={400}>
+                        <BarChart data={chartData}>
+                            <XAxis dataKey="name" stroke="#9ca3af" />
+                            <YAxis stroke="#9ca3af" tickFormatter={formatCurrency} />
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                                    borderColor: '#4b5563',
+                                    borderRadius: '0.75rem'
+                                }}
+                                labelStyle={{ color: '#f3f4f6' }}
+                                formatter={(value) => formatCurrency(value)}
+                            />
+                            <Legend />
+                            <Bar dataKey="income" fill="#22c55e" name="Income" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="expense" fill="#ef4444" name="Expense" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <p className="text-center text-gray-500 dark:text-gray-400 py-16">Not enough data for a report. Add some transactions first.</p>
+                )}
+            </Card>
+        </div>
+    );
+};
+
+const SettingsPage = () => {
+    const { user } = useAuth();
+    return (
+        <div className="space-y-6">
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Settings</h1>
+            <Card>
+                <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">User Information</h2>
+                {user ? (
+                    <div>
+                        <p className="text-gray-600 dark:text-gray-300">
+                            You are logged in with User ID:
+                        </p>
+                        <p className="font-mono text-sm bg-gray-100 dark:bg-gray-700 p-2 rounded-md mt-2 break-all">
+                            {user.uid}
+                        </p>
+                         <p className="text-gray-500 dark:text-gray-400 mt-2 text-xs">
+                            This ID is used to securely store your financial data.
+                        </p>
+                    </div>
+                ) : (
+                    <p>Not logged in.</p>
+                )}
+            </Card>
+             <Card>
+                <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Theme</h2>
+                <p className="text-gray-600 dark:text-gray-300">Theme switching is not yet implemented.</p>
+            </Card>
+        </div>
+    );
+};
+
+
+// =================================================================
+// MAIN APP COMPONENT
+// =================================================================
+const App = () => {
+    const [page, setPage] = useState('dashboard');
+    const [isSidebarOpen, setSidebarOpen] = useState(false);
+
+    const renderPage = () => {
+        switch (page) {
+            case 'dashboard': return <Dashboard />;
+            case 'transactions': return <TransactionsPage />;
+            case 'bills': return <BillsPage />;
+            case 'goals': return <GoalsPage />;
+            case 'reports': return <ReportsPage />;
+            case 'settings': return <SettingsPage />;
+            default: return <Dashboard />;
+        }
+    };
+    
+    const NavItem = ({ icon, label, pageName }) => (
+        <button
+            onClick={() => {
+                setPage(pageName);
+                setSidebarOpen(false);
+            }}
+            className={`flex items-center w-full px-4 py-3 text-lg rounded-lg transition-colors duration-200 ${
+                page === pageName 
+                ? 'bg-indigo-600 text-white shadow-lg' 
+                : 'text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-gray-700'
+            }`}
+        >
+            {icon}
+            <span className="ml-4">{label}</span>
+        </button>
+    );
+
+    return (
+        <AuthProvider>
+            <DataProvider>
+                <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex">
+                    {/* Sidebar */}
+                    <aside className={`fixed z-30 inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out bg-white dark:bg-gray-800 w-64 p-6 space-y-6 flex flex-col shadow-2xl md:shadow-none`}>
+                        <div className="flex items-center space-x-3">
+                            <div className="p-2 bg-indigo-600 rounded-lg flex items-center justify-center w-10 h-10">
+                               <span className="text-white font-bold text-lg">Rp</span>
+                            </div>
+                            <span className="text-2xl font-bold text-gray-800 dark:text-white">FinTrack</span>
+                        </div>
+                        <nav className="flex-grow space-y-2">
+                            <NavItem icon={<Home size={24} />} label="Dashboard" pageName="dashboard" />
+                            <NavItem icon={<List size={24} />} label="Transactions" pageName="transactions" />
+                            <NavItem icon={<CalendarDays size={24} />} label="Bills" pageName="bills" />
+                            <NavItem icon={<Target size={24} />} label="Goals" pageName="goals" />
+                            <NavItem icon={<PieChartIcon size={24} />} label="Reports" pageName="reports" />
+                        </nav>
+                        <div>
+                           <NavItem icon={<Settings size={24} />} label="Settings" pageName="settings" />
+                        </div>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+                        {/* Mobile Header */}
+                        <div className="md:hidden flex justify-between items-center mb-4">
+                             <div className="flex items-center space-x-3">
+                                <div className="p-2 bg-indigo-600 rounded-lg flex items-center justify-center w-10 h-10">
+                                    <span className="text-white font-bold text-lg">Rp</span>
+                                </div>
+                                <span className="text-xl font-bold text-gray-800 dark:text-white">FinTrack</span>
+                            </div>
+                            <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 rounded-md text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 shadow-md z-40">
+                                {isSidebarOpen ? <X size={24}/> : <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>}
+                            </button>
+                        </div>
+                        
+                        <div className="max-w-7xl mx-auto">
+                           {renderPage()}
+                        </div>
+                    </main>
+                </div>
+            </DataProvider>
+        </AuthProvider>
+    );
+}
+
+export default App;

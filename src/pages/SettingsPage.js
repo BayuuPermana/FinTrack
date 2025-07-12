@@ -1,11 +1,6 @@
-/*
-* =================================================================
-* FILE: src/pages/SettingsPage.js
-* =================================================================
-*/
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Card } from '../components/ui/Card';
+import Card from '../components/ui/Card';
 
 const SettingsPage = () => {
     const { user } = useAuth();
@@ -24,7 +19,10 @@ const SettingsPage = () => {
                         </p>
                          <p className="text-gray-500 dark:text-gray-400 mt-2 text-xs">
                             This ID is used to securely store your financial data.
+                        </p>                        <p className="text-gray-600 dark:text-gray-300 mt-4">
+                            You are currently using an anonymous account. Your data is saved locally.
                         </p>
+
                     </div>
                 ) : (
                     <p>Not logged in.</p>
@@ -37,4 +35,5 @@ const SettingsPage = () => {
         </div>
     );
 };
+
 export default SettingsPage;

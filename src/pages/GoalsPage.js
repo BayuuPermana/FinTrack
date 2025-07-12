@@ -1,17 +1,12 @@
-/*
-* =================================================================
-* FILE: src/pages/GoalsPage.js
-* =================================================================
-*/
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { formatCurrency } from '../utils/formatCurrency';
-import { Card } from '../components/ui/Card';
-import { Spinner } from '../components/ui/Spinner';
-import { Modal } from '../components/ui/Modal';
-import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { GoalForm } from '../components/forms/GoalForm';
-import { AddFundsForm } from '../components/forms/AddFundsForm';
+import Card from '../components/ui/Card';
+import Spinner from '../components/ui/Spinner';
+import Modal from '../components/ui/Modal';
+import ConfirmModal from '../components/ui/ConfirmModal';
+import GoalForm from '../components/forms/GoalForm';
+import AddFundsForm from '../components/forms/AddFundsForm';
+import formatCurrency from '../utils/formatCurrency';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 
 const GoalsPage = () => {
@@ -140,4 +135,5 @@ const GoalsPage = () => {
         </div>
     );
 };
+
 export default GoalsPage;

@@ -1,14 +1,9 @@
-/*
-* =================================================================
-* FILE: src/pages/Dashboard.js
-* =================================================================
-*/
 import React from 'react';
 import { useData } from '../contexts/DataContext';
-import { formatCurrency } from '../utils/formatCurrency';
-import { Card } from '../components/ui/Card';
-import { Spinner } from '../components/ui/Spinner';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import Spinner from '../components/ui/Spinner';
+import Card from '../components/ui/Card';
+import formatCurrency from '../utils/formatCurrency';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { ArrowUpRight, ArrowDownLeft, Bell } from 'lucide-react';
 
 const Dashboard = () => {
@@ -154,4 +149,5 @@ const Dashboard = () => {
         </div>
     );
 };
+
 export default Dashboard;

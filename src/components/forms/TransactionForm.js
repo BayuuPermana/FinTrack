@@ -1,11 +1,6 @@
-/*
-* =================================================================
-* FILE: src/components/forms/TransactionForm.js
-* =================================================================
-*/
 import React, { useState, useEffect } from 'react';
 
-export const TransactionForm = ({ transaction, onSave, onCancel }) => {
+const TransactionForm = ({ transaction, onSave, onCancel }) => {
     const [type, setType] = useState('expense');
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('');
@@ -72,3 +67,5 @@ export const TransactionForm = ({ transaction, onSave, onCancel }) => {
         </form>
     );
 };
+
+export default TransactionForm;

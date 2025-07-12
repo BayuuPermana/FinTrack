@@ -1,10 +1,3 @@
-/*
-* =================================================================
-* FILE: src/App.js
-* =================================================================
-* Description: The root component of the application.
-* It sets up the layout, routing, and context providers.
-*/
 import React, { useState } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
@@ -14,7 +7,7 @@ import BillsPage from './pages/BillsPage';
 import GoalsPage from './pages/GoalsPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
-import { Home, List, CalendarDays, Target, PieChart as PieChartIcon, Settings, X } from 'lucide-react';
+import { Home, List, PieChart as PieChartIcon, Settings, Target, CalendarDays, X } from 'lucide-react';
 
 const App = () => {
     const [page, setPage] = useState('dashboard');
@@ -98,5 +91,4 @@ const App = () => {
     );
 }
 
-// The final export must be the main App component.
 export default App;

@@ -1,11 +1,6 @@
-/*
-* =================================================================
-* FILE: src/components/forms/AddFundsForm.js
-* =================================================================
-*/
 import React, { useState } from 'react';
 
-export const AddFundsForm = ({ onAdd, onCancel }) => {
+const AddFundsForm = ({ onAdd, onCancel }) => {
     const [amount, setAmount] = useState('');
 
     const handleSubmit = (e) => {
@@ -26,3 +21,5 @@ export const AddFundsForm = ({ onAdd, onCancel }) => {
         </form>
     );
 };
+
+export default AddFundsForm;

@@ -1,11 +1,5 @@
-/*
-* =================================================================
-* FILE: src/contexts/AuthContext.js
-* =================================================================
-* Description: Manages user authentication state across the app.
-*/
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { onAuthStateChanged, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
+import { signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
 const AuthContext = createContext(null);
@@ -18,7 +12,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const attemptSignIn = async () => {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                if (typeof __initial_auth_token !== '6G6Sj4oKawXM2pWAVty5LfvxhnL2' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);

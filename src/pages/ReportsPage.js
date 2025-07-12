@@ -1,13 +1,8 @@
-/*
-* =================================================================
-* FILE: src/pages/ReportsPage.js
-* =================================================================
-*/
 import React from 'react';
 import { useData } from '../contexts/DataContext';
-import { formatCurrency } from '../utils/formatCurrency';
-import { Card } from '../components/ui/Card';
-import { Spinner } from '../components/ui/Spinner';
+import Card from '../components/ui/Card';
+import Spinner from '../components/ui/Spinner';
+import formatCurrency from '../utils/formatCurrency';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const ReportsPage = () => {
@@ -61,4 +56,5 @@ const ReportsPage = () => {
         </div>
     );
 };
+
 export default ReportsPage;

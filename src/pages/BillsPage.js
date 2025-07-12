@@ -1,16 +1,11 @@
-/*
-* =================================================================
-* FILE: src/pages/BillsPage.js
-* =================================================================
-*/
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { formatCurrency } from '../utils/formatCurrency';
-import { Card } from '../components/ui/Card';
-import { Spinner } from '../components/ui/Spinner';
-import { Modal } from '../components/ui/Modal';
-import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { BillForm } from '../components/forms/BillForm';
+import Card from '../components/ui/Card';
+import Spinner from '../components/ui/Spinner';
+import Modal from '../components/ui/Modal';
+import ConfirmModal from '../components/ui/ConfirmModal';
+import BillForm from '../components/forms/BillForm';
+import formatCurrency from '../utils/formatCurrency';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 
 const BillsPage = () => {
@@ -144,4 +139,5 @@ const BillsPage = () => {
         </div>
     );
 };
+
 export default BillsPage;

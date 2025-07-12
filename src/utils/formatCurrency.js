@@ -1,10 +1,4 @@
-/*
-* =================================================================
-* FILE: src/utils/formatCurrency.js
-* =================================================================
-* Description: A utility function for formatting numbers into IDR currency.
-*/
-export const formatCurrency = (amount) => {
+const formatCurrency = (amount) => {
     if (typeof amount !== 'number') {
         amount = 0;
     }
@@ -15,3 +9,5 @@ export const formatCurrency = (amount) => {
         maximumFractionDigits: 0,
     }).format(amount);
 };
+
+export default formatCurrency;

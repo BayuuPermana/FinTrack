@@ -1,10 +1,3 @@
-/*
-* =================================================================
-* FILE: src/contexts/DataContext.js
-* =================================================================
-* Description: Manages all application data (transactions, goals, bills)
-* and provides CRUD functions.
-*/
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, query } from 'firebase/firestore';
 import { db, appId } from '../firebase/config';

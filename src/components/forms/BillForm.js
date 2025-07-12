@@ -1,11 +1,6 @@
-/*
-* =================================================================
-* FILE: src/components/forms/BillForm.js
-* =================================================================
-*/
 import React, { useState, useEffect } from 'react';
 
-export const BillForm = ({ bill, onSave, onCancel }) => {
+const BillForm = ({ bill, onSave, onCancel }) => {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
     const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
@@ -67,3 +62,5 @@ export const BillForm = ({ bill, onSave, onCancel }) => {
         </form>
     );
 };
+
+export default BillForm;
