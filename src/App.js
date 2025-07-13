@@ -8,7 +8,7 @@ import BillsPage from './pages/BillsPage';
 import GoalsPage from './pages/GoalsPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
-import { Home, List, PieChart as PieChartIcon, Settings, Target, CalendarDays, X } from 'lucide-react';
+import { Home, List, PieChart as PieChartIcon, Settings, Target, CalendarDays, X, Menu } from 'lucide-react';
 
 const App = () => {
     const [page, setPage] = useState('dashboard');
@@ -54,12 +54,18 @@ const App = () => {
                     {/* Sidebar */}
                     <aside className={`fixed z-30 inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-all duration-300 ease-in-out bg-white dark:bg-gray-800 ${isSidebarCollapsed ? 'w-24' : 'w-64'} flex flex-col border-r border-gray-200 dark:border-gray-700`}>
                         <div className={`flex items-center p-4 h-16 shrink-0 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                            <div className="p-2 bg-indigo-600 rounded-lg flex items-center justify-center w-10 h-10 shrink-0">
+                            <div className={`p-2 bg-indigo-600 rounded-lg flex items-center justify-center w-10 h-10 shrink-0 ${isSidebarCollapsed ? 'hidden' : ''}`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 10v-1m-4-4H7m10 0h-1" />
                                 </svg>
                             </div>
                             <span className={`text-2xl font-bold text-gray-800 dark:text-white transition-all duration-300 ${isSidebarCollapsed ? 'opacity-0 hidden w-0 ml-0' : 'opacity-100 w-auto ml-3'}`}>FinTrack</span>
+                            <button onClick={() => setSidebarCollapsed(!isSidebarCollapsed)} className="hidden md:flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition-colors duration-200">
+                                {isSidebarCollapsed ? 
+                                    <Menu size={24} strokeWidth={2}/> : 
+                                    <X size={24} strokeWidth={2}/>
+                                }
+                            </button>
                         </div>
                         <nav className="flex-grow space-y-1 px-4 overflow-y-auto">
                             <NavItem icon={<Home size={22} />} label="Dashboard" pageName="dashboard" />
@@ -71,14 +77,7 @@ const App = () => {
                         <div className="px-4 py-2 shrink-0 mt-auto border-t border-gray-200 dark:border-gray-700">
                             <NavItem icon={<Settings size={22} />} label="Settings" pageName="settings" />
                         </div>
-                        <div className="px-4 py-2 shrink-0 border-t border-gray-200 dark:border-gray-700">
-                            <button onClick={() => setSidebarCollapsed(!isSidebarCollapsed)} className="hidden md:flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 w-full focus:outline-none transition-colors duration-200">
-                                {isSidebarCollapsed ? 
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7" /></svg> : 
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7" /></svg>
-                                }
-                            </button>
-                        </div>
+                        
                     </aside>
 
                     {/* Main Content */}
