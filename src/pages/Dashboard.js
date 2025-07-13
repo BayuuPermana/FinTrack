@@ -25,7 +25,7 @@ const Dashboard = () => {
     const pieData = Object.entries(expenseByCategory).map(([name, value]) => ({ name, value }));
     const COLORS = ['#4f46e5', '#7c3aed', '#a855f7', '#d946ef', '#ec4899', '#f472b6'];
 
-    const recentTransactions = [...transactions].sort((a, b) => b.date - a.date).slice(0, 5);
+    const recentTransactions = [...transactions].sort((a, b) => b.date - a.date).slice(0, 4);
     const upcomingBills = [...bills]
         .filter(b => !b.isPaid && new Date(b.dueDate) >= new Date())
         .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
