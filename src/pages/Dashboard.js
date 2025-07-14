@@ -3,8 +3,11 @@ import { useData } from '../contexts/DataContext';
 import Spinner from '../components/ui/Spinner';
 import Card from '../components/ui/Card';
 import formatCurrency from '../utils/formatCurrency';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { ArrowUpRight, ArrowDownLeft, Bell } from 'lucide-react';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Dashboard = () => {
     const { transactions, goals, bills, loading } = useData();
@@ -22,8 +25,37 @@ const Dashboard = () => {
             return acc;
         }, {});
 
-    const pieData = Object.entries(expenseByCategory).map(([name, value]) => ({ name, value }));
-    const COLORS = ['#4f46e5', '#7c3aed', '#a855f7', '#d946ef', '#ec4899', '#f472b6'];
+    const pieData = {
+        labels: Object.keys(expenseByCategory),
+        datasets: [{
+            data: Object.values(expenseByCategory),
+            backgroundColor: ['#a7f3d0', '#bae6fd', '#c7d2fe', '#fbcfe8', '#fecaca', '#fed7aa'],
+            hoverBackgroundColor: ['#6ee7b7', '#7dd3fc', '#a5b4fc', '#f9a8d4', '#fca5a5', '#fdba74']
+        }]
+    };
+    
+    const pieOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: document.body.classList.contains('dark') ? '#f3f4f6' : '#374151',
+                    padding: 20,
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: (context) => {
+                        const label = context.label || '';
+                        const value = context.raw || 0;
+                        return `${label}: ${formatCurrency(value)}`;
+                    }
+                }
+            }
+        }
+    };
 
     const recentTransactions = [...transactions].sort((a, b) => b.date - a.date).slice(0, 4);
     const upcomingBills = [...bills]
@@ -35,27 +67,27 @@ const Dashboard = () => {
         <div className="space-y-6">
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                 <Card className="bg-gradient-to-br from-green-400 to-green-600 text-white">
+                 <Card className="bg-gradient-to-br from-green-200 to-green-300 text-green-800">
                     <div className="flex items-center space-x-4">
-                        <div className="bg-white/20 p-3 rounded-full"><ArrowUpRight size={24} /></div>
+                        <div className="bg-white/40 p-3 rounded-full"><ArrowUpRight size={24} /></div>
                         <div>
                             <p className="text-lg">Total Income</p>
                             <p className="text-3xl font-bold">{formatCurrency(totalIncome)}</p>
                         </div>
                     </div>
                 </Card>
-                <Card className="bg-gradient-to-br from-red-400 to-red-600 text-white">
+                <Card className="bg-gradient-to-br from-red-200 to-red-300 text-red-800">
                     <div className="flex items-center space-x-4">
-                        <div className="bg-white/20 p-3 rounded-full"><ArrowDownLeft size={24} /></div>
+                        <div className="bg-white/40 p-3 rounded-full"><ArrowDownLeft size={24} /></div>
                         <div>
                             <p className="text-lg">Total Expense</p>
                             <p className="text-3xl font-bold">{formatCurrency(totalExpense)}</p>
                         </div>
                     </div>
                 </Card>
-                <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                <Card className="bg-gradient-to-br from-indigo-200 to-purple-300 text-indigo-800">
                     <div className="flex items-center space-x-4">
-                        <div className="bg-white/20 p-3 rounded-full flex items-center justify-center w-12 h-12">
+                        <div className="bg-white/40 p-3 rounded-full flex items-center justify-center w-12 h-12">
                             <span className="text-2xl font-bold">Rp</span>
                         </div>
                         <div>
@@ -64,9 +96,9 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </Card>
-                <Card className="bg-gradient-to-br from-yellow-400 to-orange-500 text-white">
+                <Card className="bg-gradient-to-br from-yellow-200 to-orange-300 text-yellow-800">
                     <div className="flex items-center space-x-4">
-                        <div className="bg-white/20 p-3 rounded-full"><Bell size={24} /></div>
+                        <div className="bg-white/40 p-3 rounded-full"><Bell size={24} /></div>
                         <div>
                             <p className="text-lg">Upcoming Bills</p>
                             <p className="text-3xl font-bold">{upcomingBills.length}</p>
@@ -78,16 +110,10 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 <Card className="lg:col-span-2">
                     <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Expense by Category</h2>
-                    {pieData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={300}>
-                            <PieChart>
-                                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label>
-                                    {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                                </Pie>
-                                <Tooltip formatter={(value) => formatCurrency(value)} />
-                                <Legend />
-                            </PieChart>
-                        </ResponsiveContainer>
+                    {pieData.datasets[0].data.length > 0 ? (
+                        <div style={{ height: '300px' }}>
+                           <Pie data={pieData} options={pieOptions} />
+                        </div>
                     ) : (
                         <p className="text-center text-gray-500 dark:text-gray-400 py-12">No expense data to display.</p>
                     )}

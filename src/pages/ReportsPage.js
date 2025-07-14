@@ -3,7 +3,10 @@ import { useData } from '../contexts/DataContext';
 import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
 import formatCurrency from '../utils/formatCurrency';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const ReportsPage = () => {
     const { transactions, loading } = useData();
@@ -23,32 +26,78 @@ const ReportsPage = () => {
         return acc;
     }, {});
 
-    const chartData = Object.values(monthlyData).sort((a,b) => new Date(a.name) - new Date(b.name));
+    const sortedMonths = Object.values(monthlyData).sort((a,b) => new Date(a.name) - new Date(b.name));
+
+    const chartData = {
+        labels: sortedMonths.map(m => m.name),
+        datasets: [
+            {
+                label: 'Income',
+                data: sortedMonths.map(m => m.income),
+                backgroundColor: '#a7f3d0',
+                borderRadius: 4,
+            },
+            {
+                label: 'Expense',
+                data: sortedMonths.map(m => m.expense),
+                backgroundColor: '#fecaca',
+                borderRadius: 4,
+            }
+        ]
+    };
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    color: document.body.classList.contains('dark') ? '#f3f4f6' : '#374151',
+                }
+            },
+            title: {
+                display: false,
+            },
+            tooltip: {
+                backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                titleColor: '#f3f4f6',
+                bodyColor: '#f3f4f6',
+                callbacks: {
+                    label: (context) => `${context.dataset.label}: ${formatCurrency(context.raw)}`
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    color: document.body.classList.contains('dark') ? '#9ca3af' : '#6b7280',
+                }
+            },
+            y: {
+                grid: {
+                    color: document.body.classList.contains('dark') ? '#4b5563' : '#e5e7eb',
+                },
+                ticks: {
+                    color: document.body.classList.contains('dark') ? '#9ca3af' : '#6b7280',
+                    callback: (value) => formatCurrency(value)
+                }
+            }
+        }
+    };
 
     return (
         <div className="space-y-6">
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Reports</h1>
             <Card>
                 <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Monthly Cash Flow</h2>
-                {chartData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={chartData}>
-                            <XAxis dataKey="name" stroke="#9ca3af" />
-                            <YAxis stroke="#9ca3af" tickFormatter={formatCurrency} />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: 'rgba(31, 41, 55, 0.8)',
-                                    borderColor: '#4b5563',
-                                    borderRadius: '0.75rem'
-                                }}
-                                labelStyle={{ color: '#f3f4f6' }}
-                                formatter={(value) => formatCurrency(value)}
-                            />
-                            <Legend />
-                            <Bar dataKey="income" fill="#22c55e" name="Income" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="expense" fill="#ef4444" name="Expense" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                {sortedMonths.length > 0 ? (
+                    <div style={{ height: '400px' }}>
+                        <Bar options={chartOptions} data={chartData} />
+                    </div>
                 ) : (
                     <p className="text-center text-gray-500 dark:text-gray-400 py-16">Not enough data for a report. Add some transactions first.</p>
                 )}
