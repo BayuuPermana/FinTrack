@@ -31,8 +31,8 @@ const Dashboard = () => {
         labels: Object.keys(expenseByCategory),
         datasets: [{
             data: Object.values(expenseByCategory),
-            backgroundColor: ['#a7f3d0', '#bae6fd', '#c7d2fe', '#fbcfe8', '#fecaca', '#fed7aa'],
-            hoverBackgroundColor: ['#6ee7b7', '#7dd3fc', '#a5b4fc', '#f9a8d4', '#fca5a5', '#fdba74']
+            backgroundColor: ['#91ffccff', '#74c6f2ff', '#eebe86ff','#77f67dff','#99abf5ff', '#f99bd0ff', '#f68282ff'],
+            hoverBackgroundColor: ['#3fffb2ff', '#33b6f2ff', '#faa041ff', '#43ed4cff', '#3251ebff', '#f648a8ff', '#f15b5bff']
         }]
     };
     
