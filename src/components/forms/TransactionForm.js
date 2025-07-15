@@ -28,7 +28,7 @@ const TransactionForm = ({ transaction, onSave, onCancel }) => {
         onSave({ type, amount: parseFloat(amount), category, date: new Date(date), description });
     };
 
-    const expenseCategories = ["Groceries", "Rent", "Utilities", "Transport", "Entertainment", "Health", "Other"];
+    const expenseCategories = ["Groceries", "Rent", "Food",  "Utilities", "Transport", "Entertainment", "Health", "Other"];
     const incomeCategories = ["Salary", "Bonus", "Freelance", "Investment", "Other"];
     const categories = type === 'expense' ? expenseCategories : incomeCategories;
 
