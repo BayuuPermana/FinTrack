@@ -1,5 +1,6 @@
 import React from 'react';
 import { useData } from '../contexts/DataContext';
+import { useTheme } from '../contexts/ThemeContext';
 import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
 import formatCurrency from '../utils/formatCurrency';
@@ -10,6 +11,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const ReportsPage = () => {
     const { transactions, loading } = useData();
+    const { theme } = useTheme();
 
     if (loading) return <Spinner />;
 
@@ -53,7 +55,7 @@ const ReportsPage = () => {
             legend: {
                 position: 'top',
                 labels: {
-                    color: document.body.classList.contains('dark') ? '#f3f4f6' : '#374151',
+                    color: theme === 'dark' ? '#f3f4f6' : '#374151',
                 }
             },
             title: {
@@ -74,15 +76,15 @@ const ReportsPage = () => {
                     display: false
                 },
                 ticks: {
-                    color: document.body.classList.contains('dark') ? '#9ca3af' : '#6b7280',
+                    color: theme === 'dark' ? '#9ca3af' : '#6b7280',
                 }
             },
             y: {
                 grid: {
-                    color: document.body.classList.contains('dark') ? '#4b5563' : '#e5e7eb',
+                    color: theme === 'dark' ? '#4b5563' : '#e5e7eb',
                 },
                 ticks: {
-                    color: document.body.classList.contains('dark') ? '#9ca3af' : '#6b7280',
+                    color: theme === 'dark' ? '#9ca3af' : '#6b7280',
                     callback: (value) => formatCurrency(value)
                 }
             }

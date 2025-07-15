@@ -1,5 +1,6 @@
 import React from 'react';
 import { useData } from '../contexts/DataContext';
+import { useTheme } from '../contexts/ThemeContext';
 import Spinner from '../components/ui/Spinner';
 import Card from '../components/ui/Card';
 import formatCurrency from '../utils/formatCurrency';
@@ -11,6 +12,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Dashboard = () => {
     const { transactions, goals, bills, loading } = useData();
+    const { theme } = useTheme();
 
     if (loading) return <Spinner />;
 
@@ -41,7 +43,7 @@ const Dashboard = () => {
             legend: {
                 position: 'bottom',
                 labels: {
-                    color: document.body.classList.contains('dark') ? '#f3f4f6' : '#374151',
+                    color: theme === 'dark' ? '#f3f4f6' : '#374151',
                     padding: 20,
                 }
             },
