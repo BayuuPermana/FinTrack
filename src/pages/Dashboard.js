@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Spinner from '../components/ui/Spinner';
@@ -6,13 +6,16 @@ import Card from '../components/ui/Card';
 import formatCurrency from '../utils/formatCurrency';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { ArrowUpRight, ArrowDownLeft, Bell } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Bell, Eye, EyeOff } from 'lucide-react';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Dashboard = () => {
     const { transactions, goals, bills, loading } = useData();
     const { theme } = useTheme();
+    const [isBalanceVisible, setIsBalanceVisible] = useState(false);
+    const [isIncomeVisible, setIsIncomeVisible] = useState(false);
+    const [isExpenseVisible, setIsExpenseVisible] = useState(false);
 
     if (loading) return <Spinner />;
 
@@ -72,18 +75,28 @@ const Dashboard = () => {
                  <Card className="bg-gradient-to-br from-green-200 to-green-300 text-green-800">
                     <div className="flex items-center space-x-4">
                         <div className="bg-white/40 p-3 rounded-full"><ArrowUpRight size={24} /></div>
-                        <div>
-                            <p className="text-lg">Total Income</p>
-                            <p className="text-3xl font-bold">{formatCurrency(totalIncome)}</p>
+                        <div onClick={() => setIsIncomeVisible(!isIncomeVisible)} className="cursor-pointer">
+                            <div className="flex items-center space-x-2">
+                                <p className="text-lg">Total Income</p>
+                                {isIncomeVisible ? <Eye size={20} /> : <EyeOff size={20} />}
+                            </div>
+                            <p className="text-3xl font-bold">
+                                {isIncomeVisible ? formatCurrency(totalIncome) : '******'}
+                            </p>
                         </div>
                     </div>
                 </Card>
                 <Card className="bg-gradient-to-br from-red-200 to-red-300 text-red-800">
                     <div className="flex items-center space-x-4">
                         <div className="bg-white/40 p-3 rounded-full"><ArrowDownLeft size={24} /></div>
-                        <div>
-                            <p className="text-lg">Total Expense</p>
-                            <p className="text-3xl font-bold">{formatCurrency(totalExpense)}</p>
+                        <div onClick={() => setIsExpenseVisible(!isExpenseVisible)} className="cursor-pointer">
+                            <div className="flex items-center space-x-2">
+                                <p className="text-lg">Total Expense</p>
+                                {isExpenseVisible ? <Eye size={20} /> : <EyeOff size={20} />}
+                            </div>
+                            <p className="text-3xl font-bold">
+                                {isExpenseVisible ? formatCurrency(totalExpense) : '******'}
+                            </p>
                         </div>
                     </div>
                 </Card>
@@ -92,9 +105,14 @@ const Dashboard = () => {
                         <div className="bg-white/40 p-3 rounded-full flex items-center justify-center w-12 h-12">
                             <span className="text-2xl font-bold">Rp</span>
                         </div>
-                        <div>
-                            <p className="text-lg">Balance</p>
-                            <p className="text-3xl font-bold">{formatCurrency(balance)}</p>
+                        <div onClick={() => setIsBalanceVisible(!isBalanceVisible)} className="cursor-pointer">
+                            <div className="flex items-center space-x-2">
+                                <p className="text-lg">Balance</p>
+                                {isBalanceVisible ? <Eye size={20} /> : <EyeOff size={20} />}
+                            </div>
+                            <p className="text-3xl font-bold">
+                                {isBalanceVisible ? formatCurrency(balance) : '******'}
+                            </p>
                         </div>
                     </div>
                 </Card>
