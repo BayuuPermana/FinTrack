@@ -8,7 +8,7 @@ import BillsPage from './pages/BillsPage';
 import GoalsPage from './pages/GoalsPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
-import { Home, List, PieChart as PieChartIcon, Settings, Target, CalendarDays, X, Menu } from 'lucide-react';
+import { Home, PieChart as PieChartIcon, Settings, Target, CalendarDays, X, Menu, ArrowLeftRight } from 'lucide-react';
 
 const App = () => {
     const [page, setPage] = useState('dashboard');
@@ -69,7 +69,7 @@ const App = () => {
                         </div>
                         <nav className="flex-grow space-y-1 px-4 overflow-y-auto">
                             <NavItem icon={<Home size={22} />} label="Dashboard" pageName="dashboard" />
-                            <NavItem icon={<List size={22} />} label="Transactions" pageName="transactions" />
+                            <NavItem icon={<ArrowLeftRight size={22} />} label="Transactions" pageName="transactions" />
                             <NavItem icon={<CalendarDays size={22} />} label="Bills" pageName="bills" />
                             <NavItem icon={<Target size={22} />} label="Goals" pageName="goals" />
                             <NavItem icon={<PieChartIcon size={22} />} label="Reports" pageName="reports" />
