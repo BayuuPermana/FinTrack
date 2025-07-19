@@ -6,7 +6,7 @@ import Card from '../components/ui/Card';
 import formatCurrency from '../utils/formatCurrency';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { ArrowUpRight, ArrowDownLeft, Bell, Eye, EyeOff } from 'lucide-react';
+import { Bell, Eye, EyeOff, ArrowRightCircle, ArrowLeftCircle } from 'lucide-react';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -74,7 +74,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                  <Card className="bg-gradient-to-br from-green-200 to-green-300 text-green-800">
                     <div className="flex items-center space-x-4">
-                        <div className="bg-white/40 p-3 rounded-full"><ArrowUpRight size={24} /></div>
+                        <div className="bg-white/40 p-3 rounded-full"><ArrowRightCircle size={24} /></div>
                         <div onClick={() => setIsIncomeVisible(!isIncomeVisible)} className="cursor-pointer">
                             <div className="flex items-center space-x-2">
                                 <p className="text-lg">Total Income</p>
@@ -88,7 +88,7 @@ const Dashboard = () => {
                 </Card>
                 <Card className="bg-gradient-to-br from-red-200 to-red-300 text-red-800">
                     <div className="flex items-center space-x-4">
-                        <div className="bg-white/40 p-3 rounded-full"><ArrowDownLeft size={24} /></div>
+                        <div className="bg-white/40 p-3 rounded-full"><ArrowLeftCircle size={24} /></div>
                         <div onClick={() => setIsExpenseVisible(!isExpenseVisible)} className="cursor-pointer">
                             <div className="flex items-center space-x-2">
                                 <p className="text-lg">Total Expense</p>
@@ -145,7 +145,7 @@ const Dashboard = () => {
                             <div key={t.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                 <div className="flex items-center space-x-3">
                                     <div className={`p-2 rounded-full ${t.type === 'income' ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300' : 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300'}`}>
-                                        {t.type === 'income' ? <ArrowUpRight size={16} /> : <ArrowDownLeft size={16} />}
+                                        {t.type === 'income' ? <ArrowRightCircle size={16} /> : <ArrowLeftCircle size={16} />}
                                     </div>
                                     <div>
                                         <p className="font-semibold text-gray-800 dark:text-gray-100">{t.description}</p>
@@ -153,7 +153,7 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                                 <p className={`font-bold ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                    {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                                    {formatCurrency(t.amount)}
                                 </p>
                             </div>
                         )) : <p className="text-center text-gray-500 dark:text-gray-400 py-12">No recent transactions.</p>}

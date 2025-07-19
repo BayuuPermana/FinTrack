@@ -6,7 +6,7 @@ import Modal from '../components/ui/Modal';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import TransactionForm from '../components/forms/TransactionForm';
 import formatCurrency from '../utils/formatCurrency';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, ArrowRightCircle, ArrowLeftCircle } from 'lucide-react';
 
 const TransactionsPage = () => {
     const { transactions, addTransaction, updateTransaction, deleteTransaction, loading } = useData();
@@ -76,6 +76,7 @@ const TransactionsPage = () => {
                         <table className="w-full text-left">
                             <thead className="border-b border-gray-200 dark:border-gray-700">
                                 <tr>
+                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300 w-12"></th>
                                     <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Date</th>
                                     <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Description</th>
                                     <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Category</th>
@@ -86,11 +87,18 @@ const TransactionsPage = () => {
                             <tbody>
                                 {sortedTransactions.length > 0 ? sortedTransactions.map(t => (
                                     <tr key={t.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td className="p-4 text-center">
+                                            {t.type === 'income' ? (
+                                                <ArrowRightCircle className="text-green-500" size={20} />
+                                            ) : (
+                                                <ArrowLeftCircle className="text-red-500" size={20} />
+                                            )}
+                                        </td>
                                         <td className="p-4 text-gray-700 dark:text-gray-300">{t.date.toLocaleDateString()}</td>
                                         <td className="p-4 font-medium text-gray-900 dark:text-white">{t.description}</td>
                                         <td className="p-4 text-gray-700 dark:text-gray-300">{t.category}</td>
                                         <td className={`p-4 font-bold text-right ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                                            {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                                            {formatCurrency(t.amount)}
                                         </td>
                                         <td className="p-4 text-center">
                                             <div className="flex justify-center space-x-2">
@@ -101,7 +109,7 @@ const TransactionsPage = () => {
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan="5" className="text-center p-8 text-gray-500 dark:text-gray-400">No transactions found.</td>
+                                        <td colSpan="6" className="text-center p-8 text-gray-500 dark:text-gray-400">No transactions found.</td>
                                     </tr>
                                 )}
                             </tbody>
