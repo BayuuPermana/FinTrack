@@ -4,7 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
 import formatCurrency from '../utils/formatCurrency';
-import { Bar, Pie } from 'react-chartjs-2';
+import { Bar, Pie, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement);
@@ -32,6 +32,21 @@ const ReportsPage = () => {
 
     const totalIncome = sortedMonths.reduce((acc, m) => acc + m.income, 0);
     const totalExpense = sortedMonths.reduce((acc, m) => acc + m.expense, 0);
+
+    const dailyExpenses = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((acc, t) => {
+            const date = new Date(t.date).toLocaleDateString('en-CA'); // YYYY-MM-DD for sorting
+            if (!acc[date]) {
+                acc[date] = 0;
+            }
+            acc[date] += t.amount;
+            return acc;
+        }, {});
+
+    const sortedDailyExpenses = Object.entries(dailyExpenses)
+        .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))
+        .map(([date, amount]) => ({ date: new Date(date).toLocaleDateString('default', { month: 'short', day: 'numeric' }), amount }));
 
     const barChartData = {
         labels: sortedMonths.map(m => m.name),
@@ -62,6 +77,9 @@ const ReportsPage = () => {
                 pointHoverBorderColor: theme === 'dark' ? '#60a5fa' : '#3b82f6',
                 tension: 0.2,
                 yAxisID: 'y',
+                borderWidth: 3, 
+                pointRadius: 5, 
+                pointHoverRadius: 7,
             }
         ]
     };
@@ -74,6 +92,24 @@ const ReportsPage = () => {
                 backgroundColor: ['#a7f3d0', '#fecaca'],
                 borderColor: [theme === 'dark' ? '#374151' : '#ffffff', theme === 'dark' ? '#374151' : '#ffffff'],
                 borderWidth: 2,
+            }
+        ]
+    };
+
+    const lineChartData = {
+        labels: sortedDailyExpenses.map(d => d.date),
+        datasets: [
+            {
+                label: 'Daily Expenses',
+                data: sortedDailyExpenses.map(d => d.amount),
+                borderColor: theme === 'dark' ? '#fca5a5' : '#ef4444',
+                backgroundColor: theme === 'dark' ? 'rgba(252, 165, 165, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                fill: true,
+                tension: 0.1,
+                pointStyle: 'rectRot',
+                pointBackgroundColor: theme === 'dark' ? '#fca5a5' : '#ef4444',
+                pointRadius: 5,
+                pointHoverRadius: 7,
             }
         ]
     };
@@ -125,6 +161,36 @@ const ReportsPage = () => {
         }
     };
 
+    const lineChartOptions = { 
+        ...barChartOptions,
+        animation: {
+            x: {
+                type: 'number',
+                easing: 'linear',
+                duration: 1500,
+                from: NaN, // the point is initially skipped
+                delay(ctx) {
+                    if (ctx.type !== 'data' || ctx.xStarted) {
+                        return 0;
+                    }
+                    ctx.xStarted = true;
+                    return ctx.index * 100;
+                },
+            },
+            y: {
+                type: 'number',
+                easing: 'linear',
+                duration: 1000,
+                from: (ctx) => {
+                    if (ctx.type === 'data') {
+                        return ctx.chart.scales.y.getBasePixel();
+                    }
+                    return undefined;
+                }
+            }
+        }
+    };
+
     const pieChartOptions = {
         ...commonChartOptions,
         plugins: {
@@ -160,6 +226,18 @@ const ReportsPage = () => {
                         </div>
                     ) : (
                         <p className="text-center text-gray-500 dark:text-gray-400 py-16">Not enough data for a report. Add some transactions first.</p>
+                    )}
+                </Card>
+            </div>
+            <div className="grid grid-cols-1 gap-6">
+                <Card>
+                    <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Daily Expense Trend</h2>
+                    {sortedDailyExpenses.length > 1 ? (
+                        <div style={{ height: '400px' }}>
+                            <Line options={lineChartOptions} data={lineChartData} />
+                        </div>
+                    ) : (
+                        <p className="text-center text-gray-500 dark:text-gray-400 py-16">Not enough expense data for a trend line. Please add more expense records.</p>
                     )}
                 </Card>
             </div>

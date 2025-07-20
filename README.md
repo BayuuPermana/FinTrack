@@ -11,7 +11,7 @@ FinTrack is a modern, responsive personal finance management application designe
 *   **Transaction Management:** Easily add, edit, and delete income or expense records with descriptions, categories, and dates.
 *   **Bill Tracking:** Never miss a payment again. Add recurring or one-time bills, get reminders for upcoming due dates, and mark them as paid.
 *   **Financial Goals:** Set savings goals (e.g., for a vacation, a new car) and track your progress as you contribute funds.
-*   **Insightful Reports:** Visualize your monthly cash flow with interactive charts to understand your spending patterns.
+*   **Insightful Reports:** Visualize your monthly cash flow, income vs. expenses, and daily spending trends with interactive charts.
 *   **Responsive Design:** Access and manage your finances seamlessly on both desktop and mobile devices.
 *   **Dark Mode:** A sleek, eye-friendly dark theme is available (implementation in progress).
 
@@ -20,7 +20,7 @@ FinTrack is a modern, responsive personal finance management application designe
 *   **Frontend:**
     *   [React](https://reactjs.org/) (v18)
     *   [Tailwind CSS](https://tailwindcss.com/) for styling
-    *   [Recharts](https://recharts.org/) for charts and data visualization
+    *   [Chart.js](https://www.chartjs.org/) with [react-chartjs-2](https://react-chartjs-2.js.org/) for charts
     *   [Lucide React](https://lucide.dev/) for icons
 *   **Backend (BaaS):**
     *   [Firebase](https://firebase.google.com/)
