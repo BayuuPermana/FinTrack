@@ -1,68 +1,113 @@
 import React, { useState, useEffect } from 'react';
+import { useData } from '../../contexts/DataContext';
 
 const TransactionForm = ({ transaction, onSave, onCancel }) => {
     const [type, setType] = useState('expense');
     const [amount, setAmount] = useState('');
-    const [category, setCategory] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState('');
     const [description, setDescription] = useState('');
+    const [category, setCategory] = useState('');
+    const [accountId, setAccountId] = useState('');
+    const { accounts } = useData();
 
     useEffect(() => {
         if (transaction) {
             setType(transaction.type);
             setAmount(transaction.amount);
-            setCategory(transaction.category);
             setDate(new Date(transaction.date).toISOString().split('T')[0]);
             setDescription(transaction.description);
+            setCategory(transaction.category);
+            setAccountId(transaction.accountId);
         } else {
             setType('expense');
             setAmount('');
-            setCategory('');
             setDate(new Date().toISOString().split('T')[0]);
             setDescription('');
+            setCategory('');
+            setAccountId(accounts.length > 0 ? accounts[0].id : '');
         }
-    }, [transaction]);
+    }, [transaction, accounts]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave({ type, amount: parseFloat(amount), category, date: new Date(date), description });
+        onSave({ type, amount: parseFloat(amount), date: new Date(date), description, category, accountId });
     };
-
-    const expenseCategories = ["Groceries", "Rent", "Food",  "Utilities", "Transport", "Entertainment", "Health", "Other"];
-    const incomeCategories = ["Salary", "Bonus", "Freelance", "Investment", "Other"];
-    const categories = type === 'expense' ? expenseCategories : incomeCategories;
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Type</label>
-                <div className="flex space-x-2">
-                    <button type="button" onClick={() => { setType('expense'); setCategory(''); }} className={`w-full py-2 rounded-lg ${type === 'expense' ? 'bg-red-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Expense</button>
-                    <button type="button" onClick={() => { setType('income'); setCategory(''); }} className={`w-full py-2 rounded-lg ${type === 'income' ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Income</button>
-                </div>
-            </div>
-            <div>
-                <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-white">Amount</label>
-                <input type="number" id="amount" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm" required />
-            </div>
-            <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-white">Category</label>
-                <select id="category" value={category} onChange={e => setCategory(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm" required>
-                    <option value="">Select a category</option>
-                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Type</label>
+                <select
+                    id="type"
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                >
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
                 </select>
             </div>
             <div>
-                <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-white">Date</label>
-                <input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm" required />
+                <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Amount</label>
+                <input
+                    type="number"
+                    id="amount"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    required
+                />
             </div>
             <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-white">Description</label>
-                <input type="text" id="description" value={description} onChange={e => setDescription(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm" required />
+                <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Date</label>
+                <input
+                    type="date"
+                    id="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    required
+                />
+            </div>
+            <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</label>
+                <input
+                    type="text"
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    required
+                />
+            </div>
+            <div>
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Category</label>
+                <input
+                    type="text"
+                    id="category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    required
+                />
+            </div>
+            <div>
+                <label htmlFor="account" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Account</label>
+                <select
+                    id="account"
+                    value={accountId}
+                    onChange={(e) => setAccountId(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    required
+                >
+                    {accounts.map(account => (
+                        <option key={account.id} value={account.id}>{account.name}</option>
+                    ))}
+                </select>
             </div>
             <div className="flex justify-end space-x-3 pt-4">
-                <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Save</button>
+                <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700">Save Transaction</button>
             </div>
         </form>
     );

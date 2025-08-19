@@ -11,7 +11,7 @@ import PageHeader from '../components/ui/PageHeader';
 import { Edit, Trash2, ArrowRightCircle, ArrowLeftCircle } from 'lucide-react';
 
 const TransactionsPage = () => {
-    const { transactions, addTransaction, updateTransaction, deleteTransaction, loading } = useData();
+    const { transactions, accounts, addTransaction, updateTransaction, deleteTransaction, loading } = useData();
     const { isOpen: isModalOpen, modalData: editingTransaction, openModal, closeModal } = useModal();
     const { isOpen: isConfirmOpen, modalData: deletingId, openModal: openConfirmModal, closeModal: closeConfirmModal } = useModal();
 
@@ -32,6 +32,11 @@ const TransactionsPage = () => {
     };
 
     const sortedTransactions = [...transactions].sort((a, b) => b.date - a.date);
+
+    const getAccountName = (accountId) => {
+        const account = accounts.find(a => a.id === accountId);
+        return account ? account.name : 'N/A';
+    };
 
     return (
         <div className="space-y-6">
@@ -61,6 +66,7 @@ const TransactionsPage = () => {
                                     <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300 w-12"></th>
                                     <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Date</th>
                                     <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Description</th>
+                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Account</th>
                                     <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Category</th>
                                     <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300 text-right">Amount</th>
                                     <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300 text-center">Actions</th>
@@ -78,6 +84,7 @@ const TransactionsPage = () => {
                                         </td>
                                         <td className="p-4 text-gray-700 dark:text-gray-300">{t.date.toLocaleDateString()}</td>
                                         <td className="p-4 font-medium text-gray-900 dark:text-white">{t.description}</td>
+                                        <td className="p-4 text-gray-700 dark:text-gray-300">{getAccountName(t.accountId)}</td>
                                         <td className="p-4 text-gray-700 dark:text-gray-300">{t.category}</td>
                                         <td className={`p-4 font-bold text-right ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                                             {formatCurrency(t.amount)}
@@ -91,7 +98,7 @@ const TransactionsPage = () => {
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan="6" className="text-center p-8 text-gray-500 dark:text-gray-400">No transactions found.</td>
+                                        <td colSpan="7" className="text-center p-8 text-gray-500 dark:text-gray-400">No transactions found.</td>
                                     </tr>
                                 )}
                             </tbody>

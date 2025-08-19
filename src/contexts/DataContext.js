@@ -13,6 +13,7 @@ export const DataProvider = ({ children }) => {
     const [bills, setBills] = useState([]);
     const [budgets, setBudgets] = useState([]);
     const [savings, setSavings] = useState([]);
+    const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -24,6 +25,7 @@ export const DataProvider = ({ children }) => {
                 bills: collection(db, `artifacts/${appId}/users/${user.uid}/bills`),
                 budgets: collection(db, `artifacts/${appId}/users/${user.uid}/budgets`),
                 savings: collection(db, `artifacts/${appId}/users/${user.uid}/savings`),
+                accounts: collection(db, `artifacts/${appId}/users/${user.uid}/accounts`),
             };
 
             const unsubscribes = Object.entries(collections).map(([name, coll]) => {
@@ -48,6 +50,7 @@ export const DataProvider = ({ children }) => {
                         case 'bills': setBills(data); break;
                         case 'budgets': setBudgets(data); break;
                         case 'savings': setSavings(data); break;
+                        case 'accounts': setAccounts(data); break;
                         default: break;
                     }
                 }, error => console.error(`Error fetching ${name}:`, error));
@@ -61,6 +64,7 @@ export const DataProvider = ({ children }) => {
             setBills([]);
             setBudgets([]);
             setSavings([]);
+            setAccounts([]);
             setLoading(false);
         }
     }, [user]);
@@ -95,6 +99,9 @@ export const DataProvider = ({ children }) => {
     const addSavings = createItem('savings');
     const updateSavings = updateItem('savings');
     const deleteSavings = deleteItem('savings');
+    const addAccount = createItem('accounts');
+    const updateAccount = updateItem('accounts');
+    const deleteAccount = deleteItem('accounts');
 
     const addFundsToGoal = async (goalId, amount) => {
         if (!user) return;
@@ -111,12 +118,13 @@ export const DataProvider = ({ children }) => {
     };
 
     const value = { 
-        transactions, goals, bills, budgets, savings,
+        transactions, goals, bills, budgets, savings, accounts,
         addTransaction, updateTransaction, deleteTransaction, 
         addGoal, updateGoal, deleteGoal, addFundsToGoal,
         addBill, updateBill, deleteBill, toggleBillPaidStatus,
         addBudget, updateBudget, deleteBudget,
         addSavings, updateSavings, deleteSavings,
+        addAccount, updateAccount, deleteAccount,
         loading 
     };
 

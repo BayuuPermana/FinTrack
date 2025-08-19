@@ -11,11 +11,19 @@ import { Bell, Eye, EyeOff, ArrowRightCircle, ArrowLeftCircle } from 'lucide-rea
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Dashboard = () => {
-    const { transactions, goals, bills, budgets, loading } = useData();
+    const { transactions, goals, bills, budgets, accounts, loading } = useData();
     const { theme } = useTheme();
     const [isBalanceVisible, setIsBalanceVisible] = useState(false);
     const [isIncomeVisible, setIsIncomeVisible] = useState(false);
     const [isExpenseVisible, setIsExpenseVisible] = useState(false);
+    const [selectedAccountId, setSelectedAccountId] = useState('all');
+
+    const filteredTransactions = useMemo(() => {
+        if (selectedAccountId === 'all') {
+            return transactions;
+        }
+        return transactions.filter(t => t.accountId === selectedAccountId);
+    }, [transactions, selectedAccountId]);
 
     const monthlySpending = useMemo(() => {
         const spending = {};
@@ -24,7 +32,7 @@ const Dashboard = () => {
         const currentYear = new Date().getFullYear();
 
         budgets.forEach(budget => {
-            const spent = transactions
+            const spent = filteredTransactions
                 .filter(t => 
                     t.category === budget.category &&
                     t.type === 'expense' &&
@@ -35,31 +43,60 @@ const Dashboard = () => {
             spending[budget.id] = spent;
         });
         return spending;
-    }, [transactions, budgets]);
+    }, [filteredTransactions, budgets]);
 
-    if (loading) return <Spinner />;
+    const totalIncome = useMemo(() => 
+        filteredTransactions
+            .filter(t => t.type === 'income')
+            .reduce((acc, t) => acc + t.amount, 0),
+    [filteredTransactions]);
 
-    const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-    const totalExpense = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
-    const balance = totalIncome - totalExpense;
+    const totalExpense = useMemo(() =>
+        filteredTransactions
+            .filter(t => t.type === 'expense')
+            .reduce((acc, t) => acc + t.amount, 0),
+    [filteredTransactions]);
+    
+    const balance = useMemo(() => {
+        if (selectedAccountId === 'all') {
+            const initialBalances = accounts.reduce((acc, account) => acc + (account.balance || 0), 0);
+            return initialBalances + totalIncome - totalExpense;
+        }
+        const selectedAccount = accounts.find(a => a.id === selectedAccountId);
+        const initialBalance = selectedAccount ? selectedAccount.balance : 0;
+        return initialBalance + totalIncome - totalExpense;
+    }, [accounts, totalIncome, totalExpense, selectedAccountId]);
 
-    const expenseByCategory = transactions
-        .filter(t => t.type === 'expense')
-        .reduce((acc, t) => {
-            acc[t.category] = (acc[t.category] || 0) + t.amount;
-            return acc;
-        }, {});
+    const expenseByCategory = useMemo(() => 
+        filteredTransactions
+            .filter(t => t.type === 'expense')
+            .reduce((acc, t) => {
+                acc[t.category] = (acc[t.category] || 0) + t.amount;
+                return acc;
+            }, {}),
+    [filteredTransactions]);
 
-    const pieData = {
+    const recentTransactions = useMemo(() => 
+        [...filteredTransactions].sort((a, b) => b.date - a.date).slice(0, 4),
+    [filteredTransactions]);
+
+    const upcomingBills = useMemo(() => 
+        [...bills]
+            .filter(b => !b.isPaid && new Date(b.dueDate) >= new Date())
+            .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+            .slice(0, 3),
+    [bills]);
+
+    const pieData = useMemo(() => ({
         labels: Object.keys(expenseByCategory),
         datasets: [{
             data: Object.values(expenseByCategory),
             backgroundColor: ['#91ffccff', '#74c6f2ff', '#eebe86ff','#77f67dff','#99abf5ff', '#f99bd0ff', '#f68282ff'],
             hoverBackgroundColor: ['#3fffb2ff', '#33b6f2ff', '#faa041ff', '#43ed4cff', '#3251ebff', '#f648a8ff', '#f15b5bff']
         }]
-    };
+    }), [expenseByCategory]);
     
-    const pieOptions = {
+    const pieOptions = useMemo(() => ({
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -80,17 +117,25 @@ const Dashboard = () => {
                 }
             }
         }
-    };
+    }), [theme]);
 
-    const recentTransactions = [...transactions].sort((a, b) => b.date - a.date).slice(0, 4);
-    const upcomingBills = [...bills]
-        .filter(b => !b.isPaid && new Date(b.dueDate) >= new Date())
-        .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-        .slice(0, 3);
+    if (loading) return <Spinner />;
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
+                <select 
+                    value={selectedAccountId} 
+                    onChange={(e) => setSelectedAccountId(e.target.value)}
+                    className="block w-48 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                >
+                    <option value="all">All Accounts</option>
+                    {accounts.map(account => (
+                        <option key={account.id} value={account.id}>{account.name}</option>
+                    ))}
+                </select>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                  <Card className="bg-gradient-to-br from-green-200 to-green-300 text-green-800">
                     <div className="flex items-center space-x-4">

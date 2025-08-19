@@ -34,20 +34,20 @@ const BudgetForm = ({ budget, onSave, onCancel }) => {
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-                <label htmlFor="budget-name" className="block text-sm font-medium text-gray-700 dark:text-white">Budget Name</label>
-                <input type="text" id="budget-name" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm" required />
+                <label htmlFor="budget-name" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Budget Name</label>
+                <input type="text" id="budget-name" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-200 shadow-sm" required />
             </div>
             <div>
-                <label htmlFor="limit" className="block text-sm font-medium text-gray-700 dark:text-white">Limit</label>
-                <input type="number" id="limit" value={limit} onChange={e => setLimit(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm" required />
+                <label htmlFor="limit" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Limit</label>
+                <input type="number" id="limit" value={limit} onChange={e => setLimit(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-200 shadow-sm" required />
             </div>
             <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-white">Category</label>
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Category</label>
                 <select 
                     id="category" 
                     value={category} 
                     onChange={e => setCategory(e.target.value)} 
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm" 
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-200 shadow-sm" 
                     required
                 >
                     <option value="" disabled>Select a category</option>

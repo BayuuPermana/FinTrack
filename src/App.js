@@ -10,7 +10,8 @@ import BudgetsPage from './pages/BudgetsPage';
 import SavingsPage from './pages/SavingsPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
-import { Home, PieChart as PieChartIcon, Settings, Target, CalendarDays, X, Menu, ArrowLeftRight, ClipboardList, PiggyBank } from 'lucide-react';
+import AccountsPage from './pages/AccountsPage';
+import { Home, PieChart as PieChartIcon, Settings, Target, CalendarDays, X, Menu, ArrowLeftRight, ClipboardList, PiggyBank, Wallet } from 'lucide-react';
 
 const App = () => {
     const [page, setPage] = useState('dashboard');
@@ -28,6 +29,7 @@ const App = () => {
             case 'savings': return <SavingsPage />;
             case 'reports': return <ReportsPage />;
             case 'settings': return <SettingsPage />;
+            case 'accounts': return <AccountsPage />;
             default: return <Dashboard />;
         }
     };
@@ -74,6 +76,7 @@ const App = () => {
                         <nav className="flex-grow space-y-1 px-4 overflow-y-auto">
                             <NavItem icon={<Home size={22} />} label="Dashboard" pageName="dashboard" />
                             <NavItem icon={<ArrowLeftRight size={22} />} label="Transactions" pageName="transactions" />
+                            <NavItem icon={<Wallet size={22} />} label="Accounts" pageName="accounts" />
                             <NavItem icon={<CalendarDays size={22} />} label="Bills" pageName="bills" />
                             <NavItem icon={<Target size={22} />} label="Goals" pageName="goals" />
                             <NavItem icon={<ClipboardList size={22} />} label="Budgets" pageName="budgets" />
