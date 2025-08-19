@@ -127,7 +127,7 @@ export const DataProvider = ({ children }) => {
             if (bill.transactionId) return; // Already has a transaction
 
             const newTransaction = {
-                name: bill.name,
+                description: bill.name,
                 amount: bill.amount,
                 category: bill.category,
                 date: new Date(),

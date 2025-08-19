@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useData } from '../../contexts/DataContext';
 
 const BillForm = ({ bill, onSave, onCancel }) => {
     const [name, setName] = useState('');
@@ -6,6 +7,8 @@ const BillForm = ({ bill, onSave, onCancel }) => {
     const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
     const [category, setCategory] = useState('');
     const [isRecurring, setIsRecurring] = useState(false);
+    const [accountId, setAccountId] = useState('');
+    const { accounts } = useData();
 
     useEffect(() => {
         if (bill) {
@@ -14,18 +17,20 @@ const BillForm = ({ bill, onSave, onCancel }) => {
             setDueDate(new Date(bill.dueDate).toISOString().split('T')[0]);
             setCategory(bill.category);
             setIsRecurring(bill.isRecurring || false);
+            setAccountId(bill.accountId || (accounts.length > 0 ? accounts[0].id : ''));
         } else {
             setName('');
             setAmount('');
             setDueDate(new Date().toISOString().split('T')[0]);
             setCategory('');
             setIsRecurring(false);
+            setAccountId(accounts.length > 0 ? accounts[0].id : '');
         }
-    }, [bill]);
+    }, [bill, accounts]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave({ name, amount: parseFloat(amount), dueDate: new Date(dueDate), category, isRecurring, isPaid: bill ? bill.isPaid : false });
+        onSave({ name, amount: parseFloat(amount), dueDate: new Date(dueDate), category, isRecurring, accountId, isPaid: bill ? bill.isPaid : false });
     };
 
     const categories = ["Rent", "Utilities", "Subscription", "Loan", "Insurance", "Other"];
@@ -45,6 +50,20 @@ const BillForm = ({ bill, onSave, onCancel }) => {
                 <select id="bill-category" value={category} onChange={e => setCategory(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-white shadow-sm" required>
                     <option value="">Select a category</option>
                     {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+            </div>
+            <div>
+                <label htmlFor="account" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Account</label>
+                <select
+                    id="account"
+                    value={accountId}
+                    onChange={(e) => setAccountId(e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-white shadow-sm"
+                    required
+                >
+                    {accounts.map(account => (
+                        <option key={account.id} value={account.id}>{account.name}</option>
+                    ))}
                 </select>
             </div>
             <div>
