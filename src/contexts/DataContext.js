@@ -71,7 +71,8 @@ export const DataProvider = ({ children }) => {
 
     const createItem = (collectionName) => async (item) => {
         if (!user) return;
-        await addDoc(collection(db, `artifacts/${appId}/users/${user.uid}/${collectionName}`), item);
+        const docRef = await addDoc(collection(db, `artifacts/${appId}/users/${user.uid}/${collectionName}`), item);
+        return docRef.id;
     };
 
     const updateItem = (collectionName) => async (id, updatedItem) => {
@@ -113,8 +114,37 @@ export const DataProvider = ({ children }) => {
     };
 
     const toggleBillPaidStatus = async (billId, isPaid) => {
-        if(!user) return;
-        await updateBill(billId, { isPaid });
+        if (!user) return;
+
+        const bill = bills.find(b => b.id === billId);
+        if (!bill) {
+            console.error("Bill not found");
+            return;
+        }
+
+        // If marking as paid, create a transaction
+        if (isPaid) {
+            if (bill.transactionId) return; // Already has a transaction
+
+            const newTransaction = {
+                name: bill.name,
+                amount: bill.amount,
+                category: bill.category,
+                date: new Date(),
+                type: 'expense',
+                accountId: bill.accountId || (accounts.length > 0 ? accounts[0].id : null),
+            };
+
+            const transactionId = await addTransaction(newTransaction);
+            await updateBill(billId, { isPaid: true, transactionId });
+        
+        // If marking as unpaid, delete the transaction
+        } else {
+            if (bill.transactionId) {
+                await deleteTransaction(bill.transactionId);
+            }
+            await updateBill(billId, { isPaid: false, transactionId: null });
+        }
     };
 
     const value = { 
