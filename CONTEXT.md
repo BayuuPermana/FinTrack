@@ -82,3 +82,14 @@ The application is a standard Create React App project with the following direct
 -   **Theme Colors:** The application uses a light and dark theme. The primary accent color is `sky-500`, and the light theme uses soft, light colors.
 
 By referencing this document, we can quickly understand the application's architecture and locate the relevant files for future tasks, reducing the need for extensive file searches and keeping our interactions efficient.
+
+---
+
+## Changelog
+
+### Budget Form Category Dropdown (August 19, 2025)
+
+-   **Component:** `src/components/forms/BudgetForm.js`
+-   **Change:** Modified the "Category" field from a text input to a dropdown menu (`<select>`).
+-   **Reasoning:** To ensure data consistency, the dropdown is now dynamically populated with unique expense categories sourced directly from the user's existing transactions via the `DataContext`. This prevents typos and restricts budget categories to those that are actively in use, improving data integrity.
+-   **Related Changes:** Removed the `expenseCategories` prop from `src/pages/BudgetsPage.js` as the form now sources its own data.

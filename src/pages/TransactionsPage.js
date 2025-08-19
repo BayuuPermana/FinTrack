@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useData } from '../contexts/DataContext';
 import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
@@ -6,24 +6,14 @@ import Modal from '../components/ui/Modal';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import TransactionForm from '../components/forms/TransactionForm';
 import formatCurrency from '../utils/formatCurrency';
-import { PlusCircle, Edit, Trash2, ArrowRightCircle, ArrowLeftCircle } from 'lucide-react';
+import useModal from '../hooks/useModal';
+import PageHeader from '../components/ui/PageHeader';
+import { Edit, Trash2, ArrowRightCircle, ArrowLeftCircle } from 'lucide-react';
 
 const TransactionsPage = () => {
     const { transactions, addTransaction, updateTransaction, deleteTransaction, loading } = useData();
-    const [isModalOpen, setModalOpen] = useState(false);
-    const [isConfirmOpen, setConfirmOpen] = useState(false);
-    const [editingTransaction, setEditingTransaction] = useState(null);
-    const [deletingId, setDeletingId] = useState(null);
-
-    const handleOpenModal = (transaction = null) => {
-        setEditingTransaction(transaction);
-        setModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setEditingTransaction(null);
-        setModalOpen(false);
-    };
+    const { isOpen: isModalOpen, modalData: editingTransaction, openModal, closeModal } = useModal();
+    const { isOpen: isConfirmOpen, modalData: deletingId, openModal: openConfirmModal, closeModal: closeConfirmModal } = useModal();
 
     const handleSaveTransaction = async (transaction) => {
         if (editingTransaction) {
@@ -31,40 +21,32 @@ const TransactionsPage = () => {
         } else {
             await addTransaction(transaction);
         }
-        handleCloseModal();
-    };
-
-    const openConfirmDelete = (id) => {
-        setDeletingId(id);
-        setConfirmOpen(true);
+        closeModal();
     };
 
     const handleDelete = async () => {
         if (deletingId) {
             await deleteTransaction(deletingId);
         }
-        setConfirmOpen(false);
-        setDeletingId(null);
+        closeConfirmModal();
     };
 
     const sortedTransactions = [...transactions].sort((a, b) => b.date - a.date);
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Transactions</h1>
-                <button onClick={() => handleOpenModal()} className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-lg">
-                    <PlusCircle size={20} />
-                    <span>Add Transaction</span>
-                </button>
-            </div>
+            <PageHeader 
+                title="Transactions"
+                buttonText="Add Transaction"
+                onButtonClick={() => openModal()}
+            />
 
-            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingTransaction ? "Edit Transaction" : "Add Transaction"}>
-                <TransactionForm transaction={editingTransaction} onSave={handleSaveTransaction} onCancel={handleCloseModal} />
+            <Modal isOpen={isModalOpen} onClose={closeModal} title={editingTransaction ? "Edit Transaction" : "Add Transaction"}>
+                <TransactionForm transaction={editingTransaction} onSave={handleSaveTransaction} onCancel={closeModal} />
             </Modal>
             <ConfirmModal 
                 isOpen={isConfirmOpen}
-                onClose={() => setConfirmOpen(false)}
+                onClose={closeConfirmModal}
                 onConfirm={handleDelete}
                 title="Delete Transaction"
                 message="Are you sure you want to delete this transaction? This action cannot be undone."
@@ -102,8 +84,8 @@ const TransactionsPage = () => {
                                         </td>
                                         <td className="p-4 text-center">
                                             <div className="flex justify-center space-x-2">
-                                                <button onClick={() => handleOpenModal(t)} className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"><Edit size={18} /></button>
-                                                <button onClick={() => openConfirmDelete(t.id)} className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"><Trash2 size={18} /></button>
+                                                <button onClick={() => openModal(t)} className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"><Edit size={18} /></button>
+                                                <button onClick={() => openConfirmModal(t.id)} className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"><Trash2 size={18} /></button>
                                             </div>
                                         </td>
                                     </tr>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Spinner from '../components/ui/Spinner';
@@ -11,11 +11,31 @@ import { Bell, Eye, EyeOff, ArrowRightCircle, ArrowLeftCircle } from 'lucide-rea
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Dashboard = () => {
-    const { transactions, goals, bills, loading } = useData();
+    const { transactions, goals, bills, budgets, loading } = useData();
     const { theme } = useTheme();
     const [isBalanceVisible, setIsBalanceVisible] = useState(false);
     const [isIncomeVisible, setIsIncomeVisible] = useState(false);
     const [isExpenseVisible, setIsExpenseVisible] = useState(false);
+
+    const monthlySpending = useMemo(() => {
+        const spending = {};
+        if (!budgets) return spending;
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+
+        budgets.forEach(budget => {
+            const spent = transactions
+                .filter(t => 
+                    t.category === budget.category &&
+                    t.type === 'expense' &&
+                    new Date(t.date).getMonth() === currentMonth &&
+                    new Date(t.date).getFullYear() === currentYear
+                )
+                .reduce((sum, t) => sum + t.amount, 0);
+            spending[budget.id] = spent;
+        });
+        return spending;
+    }, [transactions, budgets]);
 
     if (loading) return <Spinner />;
 
@@ -160,7 +180,7 @@ const Dashboard = () => {
                     </div>
                 </Card>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card>
                     <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Financial Goals</h2>
                     <div className="space-y-4">
@@ -175,6 +195,27 @@ const Dashboard = () => {
                                 </div>
                             </div>
                         )) : <p className="text-center text-gray-500 dark:text-gray-400 py-8">You haven't set any goals yet.</p>}
+                    </div>
+                </Card>
+                <Card>
+                    <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Active Budgets</h2>
+                    <div className="space-y-4">
+                        {budgets && budgets.length > 0 ? budgets.slice(0, 3).map(budget => {
+                            const spentAmount = monthlySpending[budget.id] || 0;
+                            const progress = budget.limit > 0 ? (spentAmount / budget.limit) * 100 : 0;
+                            const progressColor = progress > 100 ? 'bg-red-500' : 'bg-gradient-to-r from-sky-500 to-cyan-600';
+                            return (
+                                <div key={budget.id}>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="font-semibold text-gray-700 dark:text-gray-200">{budget.name}</span>
+                                        <span className="text-sm text-gray-500 dark:text-gray-400">{formatCurrency(spentAmount)} / {formatCurrency(budget.limit)}</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+                                        <div className={`${progressColor} h-4 rounded-full`} style={{ width: `${Math.min(progress, 100)}%` }}></div>
+                                    </div>
+                                </div>
+                            )
+                        }) : <p className="text-center text-gray-500 dark:text-gray-400 py-8">No active budgets for this month.</p>}
                     </div>
                 </Card>
                 <Card>

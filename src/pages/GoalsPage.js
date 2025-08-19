@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useData } from '../contexts/DataContext';
 import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
@@ -7,36 +7,14 @@ import ConfirmModal from '../components/ui/ConfirmModal';
 import GoalForm from '../components/forms/GoalForm';
 import AddFundsForm from '../components/forms/AddFundsForm';
 import formatCurrency from '../utils/formatCurrency';
+import useModal from '../hooks/useModal';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 
 const GoalsPage = () => {
     const { goals, addGoal, updateGoal, deleteGoal, addFundsToGoal, loading } = useData();
-    const [isModalOpen, setModalOpen] = useState(false);
-    const [editingGoal, setEditingGoal] = useState(null);
-    const [isFundsModalOpen, setFundsModalOpen] = useState(false);
-    const [fundingGoal, setFundingGoal] = useState(null);
-    const [isConfirmOpen, setConfirmOpen] = useState(false);
-    const [deletingId, setDeletingId] = useState(null);
-
-    const handleOpenModal = (goal = null) => {
-        setEditingGoal(goal);
-        setModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setEditingGoal(null);
-        setModalOpen(false);
-    };
-    
-    const handleOpenFundsModal = (goal) => {
-        setFundingGoal(goal);
-        setFundsModalOpen(true);
-    };
-    
-    const handleCloseFundsModal = () => {
-        setFundingGoal(null);
-        setFundsModalOpen(false);
-    };
+    const { isOpen: isModalOpen, modalData: editingGoal, openModal, closeModal } = useModal();
+    const { isOpen: isFundsModalOpen, modalData: fundingGoal, openModal: openFundsModal, closeModal: closeFundsModal } = useModal();
+    const { isOpen: isConfirmOpen, modalData: deletingId, openModal: openConfirmModal, closeModal: closeConfirmModal } = useModal();
 
     const handleSaveGoal = async (goal) => {
         if (editingGoal) {
@@ -44,50 +22,44 @@ const GoalsPage = () => {
         } else {
             await addGoal(goal);
         }
-        handleCloseModal();
-    };
-
-    const openConfirmDelete = (id) => {
-        setDeletingId(id);
-        setConfirmOpen(true);
+        closeModal();
     };
 
     const handleDelete = async () => {
         if(deletingId) {
             await deleteGoal(deletingId);
         }
-        setConfirmOpen(false);
-        setDeletingId(null);
+        closeConfirmModal();
     };
     
     const handleAddFunds = async (amount) => {
         if(fundingGoal && amount > 0) {
             await addFundsToGoal(fundingGoal.id, amount);
         }
-        handleCloseFundsModal();
+        closeFundsModal();
     };
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Financial Goals</h1>
-                <button onClick={() => handleOpenModal()} className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-lg">
+                <button onClick={() => openModal()} className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-lg">
                     <PlusCircle size={20} />
                     <span>New Goal</span>
                 </button>
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingGoal ? "Edit Goal" : "Add New Goal"}>
-                <GoalForm goal={editingGoal} onSave={handleSaveGoal} onCancel={handleCloseModal} />
+            <Modal isOpen={isModalOpen} onClose={closeModal} title={editingGoal ? "Edit Goal" : "Add New Goal"}>
+                <GoalForm goal={editingGoal} onSave={handleSaveGoal} onCancel={closeModal} />
             </Modal>
             
-            <Modal isOpen={isFundsModalOpen} onClose={handleCloseFundsModal} title={`Add Funds to "${fundingGoal?.name}"`}>
-                <AddFundsForm onAdd={handleAddFunds} onCancel={handleCloseFundsModal} />
+            <Modal isOpen={isFundsModalOpen} onClose={closeFundsModal} title={`Add Funds to "${fundingGoal?.name}"`}>
+                <AddFundsForm onAdd={handleAddFunds} onCancel={closeFundsModal} />
             </Modal>
 
             <ConfirmModal 
                 isOpen={isConfirmOpen}
-                onClose={() => setConfirmOpen(false)}
+                onClose={closeConfirmModal}
                 onConfirm={handleDelete}
                 title="Delete Goal"
                 message="Are you sure you want to delete this goal? This action cannot be undone."
@@ -103,8 +75,8 @@ const GoalsPage = () => {
                                     <div className="flex justify-between items-start">
                                         <h2 className="text-xl font-bold text-gray-800 dark:text-white">{goal.name}</h2>
                                         <div className="flex space-x-2">
-                                           <button onClick={() => handleOpenModal(goal)} className="text-gray-400 hover:text-indigo-500"><Edit size={18} /></button>
-                                           <button onClick={() => openConfirmDelete(goal.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={18} /></button>
+                                           <button onClick={() => openModal(goal)} className="text-gray-400 hover:text-indigo-500"><Edit size={18} /></button>
+                                           <button onClick={() => openConfirmModal(goal.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={18} /></button>
                                         </div>
                                     </div>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Target: {formatCurrency(goal.targetAmount)}</p>
@@ -120,7 +92,7 @@ const GoalsPage = () => {
                                         <p className="text-right text-sm text-gray-500 dark:text-gray-400">{formatCurrency(goal.currentAmount || 0)} saved</p>
                                     </div>
                                 </div>
-                                <button onClick={() => handleOpenFundsModal(goal)} className="w-full mt-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                <button onClick={() => openFundsModal(goal)} className="w-full mt-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
                                     Add Funds
                                 </button>
                             </Card>

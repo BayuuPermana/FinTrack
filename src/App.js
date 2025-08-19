@@ -6,9 +6,11 @@ import Dashboard from './pages/Dashboard';
 import TransactionsPage from './pages/TransactionsPage';
 import BillsPage from './pages/BillsPage';
 import GoalsPage from './pages/GoalsPage';
+import BudgetsPage from './pages/BudgetsPage';
+import SavingsPage from './pages/SavingsPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
-import { Home, PieChart as PieChartIcon, Settings, Target, CalendarDays, X, Menu, ArrowLeftRight } from 'lucide-react';
+import { Home, PieChart as PieChartIcon, Settings, Target, CalendarDays, X, Menu, ArrowLeftRight, ClipboardList, PiggyBank } from 'lucide-react';
 
 const App = () => {
     const [page, setPage] = useState('dashboard');
@@ -22,6 +24,8 @@ const App = () => {
             case 'transactions': return <TransactionsPage />;
             case 'bills': return <BillsPage />;
             case 'goals': return <GoalsPage />;
+            case 'budgets': return <BudgetsPage />;
+            case 'savings': return <SavingsPage />;
             case 'reports': return <ReportsPage />;
             case 'settings': return <SettingsPage />;
             default: return <Dashboard />;
@@ -72,6 +76,8 @@ const App = () => {
                             <NavItem icon={<ArrowLeftRight size={22} />} label="Transactions" pageName="transactions" />
                             <NavItem icon={<CalendarDays size={22} />} label="Bills" pageName="bills" />
                             <NavItem icon={<Target size={22} />} label="Goals" pageName="goals" />
+                            <NavItem icon={<ClipboardList size={22} />} label="Budgets" pageName="budgets" />
+                            <NavItem icon={<PiggyBank size={22} />} label="Savings" pageName="savings" />
                             <NavItem icon={<PieChartIcon size={22} />} label="Reports" pageName="reports" />
                         </nav>
                         <div className="px-4 py-2 shrink-0 mt-auto border-t border-gray-200 dark:border-gray-700">

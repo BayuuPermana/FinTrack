@@ -11,6 +11,8 @@ export const DataProvider = ({ children }) => {
     const [transactions, setTransactions] = useState([]);
     const [goals, setGoals] = useState([]);
     const [bills, setBills] = useState([]);
+    const [budgets, setBudgets] = useState([]);
+    const [savings, setSavings] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -20,6 +22,8 @@ export const DataProvider = ({ children }) => {
                 transactions: collection(db, `artifacts/${appId}/users/${user.uid}/transactions`),
                 goals: collection(db, `artifacts/${appId}/users/${user.uid}/goals`),
                 bills: collection(db, `artifacts/${appId}/users/${user.uid}/bills`),
+                budgets: collection(db, `artifacts/${appId}/users/${user.uid}/budgets`),
+                savings: collection(db, `artifacts/${appId}/users/${user.uid}/savings`),
             };
 
             const unsubscribes = Object.entries(collections).map(([name, coll]) => {
@@ -42,6 +46,8 @@ export const DataProvider = ({ children }) => {
                         case 'transactions': setTransactions(data); break;
                         case 'goals': setGoals(data); break;
                         case 'bills': setBills(data); break;
+                        case 'budgets': setBudgets(data); break;
+                        case 'savings': setSavings(data); break;
                         default: break;
                     }
                 }, error => console.error(`Error fetching ${name}:`, error));
@@ -53,6 +59,8 @@ export const DataProvider = ({ children }) => {
             setTransactions([]);
             setGoals([]);
             setBills([]);
+            setBudgets([]);
+            setSavings([]);
             setLoading(false);
         }
     }, [user]);
@@ -81,6 +89,12 @@ export const DataProvider = ({ children }) => {
     const addBill = createItem('bills');
     const updateBill = updateItem('bills');
     const deleteBill = deleteItem('bills');
+    const addBudget = createItem('budgets');
+    const updateBudget = updateItem('budgets');
+    const deleteBudget = deleteItem('budgets');
+    const addSavings = createItem('savings');
+    const updateSavings = updateItem('savings');
+    const deleteSavings = deleteItem('savings');
 
     const addFundsToGoal = async (goalId, amount) => {
         if (!user) return;
@@ -97,10 +111,12 @@ export const DataProvider = ({ children }) => {
     };
 
     const value = { 
-        transactions, goals, bills, 
+        transactions, goals, bills, budgets, savings,
         addTransaction, updateTransaction, deleteTransaction, 
         addGoal, updateGoal, deleteGoal, addFundsToGoal,
         addBill, updateBill, deleteBill, toggleBillPaidStatus,
+        addBudget, updateBudget, deleteBudget,
+        addSavings, updateSavings, deleteSavings,
         loading 
     };
 

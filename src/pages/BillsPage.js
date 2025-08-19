@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useData } from '../contexts/DataContext';
 import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
@@ -6,24 +6,14 @@ import Modal from '../components/ui/Modal';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import BillForm from '../components/forms/BillForm';
 import formatCurrency from '../utils/formatCurrency';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import useModal from '../hooks/useModal';
+import PageHeader from '../components/ui/PageHeader';
+import { Edit, Trash2 } from 'lucide-react';
 
 const BillsPage = () => {
     const { bills, addBill, updateBill, deleteBill, toggleBillPaidStatus, loading } = useData();
-    const [isModalOpen, setModalOpen] = useState(false);
-    const [editingBill, setEditingBill] = useState(null);
-    const [isConfirmOpen, setConfirmOpen] = useState(false);
-    const [deletingId, setDeletingId] = useState(null);
-
-    const handleOpenModal = (bill = null) => {
-        setEditingBill(bill);
-        setModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setEditingBill(null);
-        setModalOpen(false);
-    };
+    const { isOpen: isModalOpen, modalData: editingBill, openModal, closeModal } = useModal();
+    const { isOpen: isConfirmOpen, modalData: deletingId, openModal: openConfirmModal, closeModal: closeConfirmModal } = useModal();
 
     const handleSaveBill = async (bill) => {
         if (editingBill) {
@@ -31,20 +21,14 @@ const BillsPage = () => {
         } else {
             await addBill(bill);
         }
-        handleCloseModal();
-    };
-
-    const openConfirmDelete = (id) => {
-        setDeletingId(id);
-        setConfirmOpen(true);
+        closeModal();
     };
 
     const handleDelete = async () => {
         if (deletingId) {
             await deleteBill(deletingId);
         }
-        setConfirmOpen(false);
-        setDeletingId(null);
+        closeConfirmModal();
     };
 
     const handlePayBill = async (bill) => {
@@ -63,20 +47,18 @@ const BillsPage = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Bill Management</h1>
-                <button onClick={() => handleOpenModal()} className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-lg">
-                    <PlusCircle size={20} />
-                    <span>Add Bill</span>
-                </button>
-            </div>
+            <PageHeader 
+                title="Bill Management"
+                buttonText="Add Bill"
+                onButtonClick={() => openModal()}
+            />
 
-            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingBill ? "Edit Bill" : "Add New Bill"}>
-                <BillForm bill={editingBill} onSave={handleSaveBill} onCancel={handleCloseModal} />
+            <Modal isOpen={isModalOpen} onClose={closeModal} title={editingBill ? "Edit Bill" : "Add New Bill"}>
+                <BillForm bill={editingBill} onSave={handleSaveBill} onCancel={closeModal} />
             </Modal>
             <ConfirmModal 
                 isOpen={isConfirmOpen}
-                onClose={() => setConfirmOpen(false)}
+                onClose={closeConfirmModal}
                 onConfirm={handleDelete}
                 title="Delete Bill"
                 message="Are you sure you want to delete this bill? This action cannot be undone."
@@ -102,8 +84,8 @@ const BillsPage = () => {
                                                 <p className="font-bold text-lg text-orange-500">{formatCurrency(bill.amount)}</p>
                                                 <p className="text-sm text-gray-500 dark:text-gray-400">Due: {new Date(bill.dueDate).toLocaleDateString()}</p>
                                             </div>
-                                            <button onClick={() => handleOpenModal(bill)} className="text-gray-400 hover:text-indigo-500"><Edit size={18} /></button>
-                                            <button onClick={() => openConfirmDelete(bill.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={18} /></button>
+                                            <button onClick={() => openModal(bill)} className="text-gray-400 hover:text-indigo-500"><Edit size={18} /></button>
+                                            <button onClick={() => openConfirmModal(bill.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={18} /></button>
                                         </div>
                                     </div>
                                 ))}
