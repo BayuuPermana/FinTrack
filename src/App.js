@@ -26,7 +26,7 @@ const App = () => {
             case 'bills': return <BillsPage />;
             case 'goals': return <GoalsPage />;
             case 'budgets': return <BudgetsPage />;
-            case 'savings': return <SavingsPage />;
+            // case 'savings': return <SavingsPage />;
             case 'reports': return <ReportsPage />;
             case 'settings': return <SettingsPage />;
             case 'accounts': return <AccountsPage />;
@@ -80,7 +80,7 @@ const App = () => {
                             <NavItem icon={<CalendarDays size={22} />} label="Bills" pageName="bills" />
                             <NavItem icon={<Target size={22} />} label="Goals" pageName="goals" />
                             <NavItem icon={<ClipboardList size={22} />} label="Budgets" pageName="budgets" />
-                            <NavItem icon={<PiggyBank size={22} />} label="Savings" pageName="savings" />
+                            {/* <NavItem icon={<PiggyBank size={22} />} label="Savings" pageName="savings" /> */}
                             <NavItem icon={<PieChartIcon size={22} />} label="Reports" pageName="reports" />
                         </nav>
                         <div className="px-4 py-2 shrink-0 mt-auto border-t border-gray-200 dark:border-gray-700">
