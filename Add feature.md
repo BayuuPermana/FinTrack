@@ -22,3 +22,33 @@ To enhance FinTrack by enabling users to manage finances across multiple distinc
         The main dashboard should be updated to show an aggregated total balance across all accounts.
 
         The dashboard and reports sections should allow users to filter transactions and view financial summaries by a specific account.
+
+---
+
+### Feature: Monthly Budget Reset
+
+**1. Goal:**
+To provide users with a way to automatically or manually reset their budget totals at the beginning of each month, aligning the app with standard monthly budgeting cycles.
+
+**2. Functional Requirements:**
+
+    **Manual Reset:**
+    - A "Reset Budgets for New Month" button shall be added to the `BudgetsPage`.
+    - Clicking this button will trigger a confirmation modal to prevent accidental data loss.
+    - On confirmation, a function will execute to reset the `currentAmount` of all budget items to `0` for the logged-in user.
+
+    **Automated Reset (Optional - Phase 2):**
+    - Implement a server-side scheduled function (e.g., Firebase Cloud Function).
+    - This function will automatically run on the first day of every month.
+    - It will perform the budget reset logic for all users in the database, ensuring budgets are fresh for the new month without requiring user interaction.
+
+**3. Technical Plan:**
+    - **Frontend:**
+        - Modify `src/pages/BudgetsPage.js` to include the new reset button.
+        - Integrate `src/components/ui/ConfirmModal.js` for the confirmation step.
+    - **Backend/Data Layer:**
+        - Add a `resetBudgets()` function to `src/contexts/DataContext.js`.
+        - This function will contain the logic to connect to Firebase and update the user's budget entries.
+    - **Serverless (for automation):**
+        - Set up a new Firebase Functions environment.
+        - Write and deploy a new scheduled function triggered by a cron job expression.
