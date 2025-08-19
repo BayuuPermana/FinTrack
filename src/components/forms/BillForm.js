@@ -34,22 +34,22 @@ const BillForm = ({ bill, onSave, onCancel }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
             <div>
                 <label htmlFor="bill-name" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Bill Name</label>
-                <input type="text" id="bill-name" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-200 shadow-sm" required />
+                <input type="text" id="bill-name" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-white shadow-sm" required />
             </div>
             <div>
                 <label htmlFor="bill-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Amount</label>
-                <input type="number" id="bill-amount" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-200 shadow-sm" required />
+                <input type="number" id="bill-amount" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-white shadow-sm" required />
             </div>
             <div>
                 <label htmlFor="bill-category" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Category</label>
-                <select id="bill-category" value={category} onChange={e => setCategory(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-200 shadow-sm" required>
+                <select id="bill-category" value={category} onChange={e => setCategory(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-white shadow-sm" required>
                     <option value="">Select a category</option>
                     {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
             </div>
             <div>
                 <label htmlFor="bill-due-date" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Due Date</label>
-                <input type="date" id="bill-due-date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-200 shadow-sm" required />
+                <input type="date" id="bill-due-date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-white shadow-sm" required />
             </div>
             <div className="flex items-center">
                 <input id="is-recurring" type="checkbox" checked={isRecurring} onChange={e => setIsRecurring(e.target.checked)} className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />

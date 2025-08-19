@@ -28,7 +28,7 @@ const AccountForm = ({ account, onSave, onCancel }) => {
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
                     required
                 />
             </div>
@@ -39,7 +39,7 @@ const AccountForm = ({ account, onSave, onCancel }) => {
                     id="balance"
                     value={balance}
                     onChange={(e) => setBalance(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
                     required
                 />
             </div>

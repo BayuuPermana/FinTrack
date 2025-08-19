@@ -41,7 +41,7 @@ const TransactionForm = ({ transaction, onSave, onCancel }) => {
                     id="type"
                     value={type}
                     onChange={(e) => setType(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
                 >
                     <option value="income">Income</option>
                     <option value="expense">Expense</option>
@@ -54,7 +54,7 @@ const TransactionForm = ({ transaction, onSave, onCancel }) => {
                     id="amount"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
                     required
                 />
             </div>
@@ -65,7 +65,7 @@ const TransactionForm = ({ transaction, onSave, onCancel }) => {
                     id="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
                     required
                 />
             </div>
@@ -76,7 +76,7 @@ const TransactionForm = ({ transaction, onSave, onCancel }) => {
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
                     required
                 />
             </div>
@@ -87,7 +87,7 @@ const TransactionForm = ({ transaction, onSave, onCancel }) => {
                     id="category"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
                     required
                 />
             </div>
@@ -97,7 +97,7 @@ const TransactionForm = ({ transaction, onSave, onCancel }) => {
                     id="account"
                     value={accountId}
                     onChange={(e) => setAccountId(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
                     required
                 >
                     {accounts.map(account => (
