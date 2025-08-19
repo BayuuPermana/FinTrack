@@ -10,6 +10,7 @@ FinTrack is a modern, responsive personal finance management application designe
 *   **Dashboard:** Get a comprehensive overview of your finances at a glance, including income, expenses, current balance, and upcoming bills.
 *   **Transaction Management:** Easily add, edit, and delete income or expense records with descriptions, categories, and dates.
 *   **Bill Tracking:** Never miss a payment again. Add recurring or one-time bills, get reminders for upcoming due dates, and mark them as paid.
+*   **Budgetting:** track your budget limits.
 *   **Financial Goals:** Set savings goals (e.g., for a vacation, a new car) and track your progress as you contribute funds.
 *   **Insightful Reports:** Visualize your monthly cash flow, income vs. expenses, and daily spending trends with interactive charts.
 *   **Responsive Design:** Access and manage your finances seamlessly on both desktop and mobile devices.
