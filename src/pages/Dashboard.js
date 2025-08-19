@@ -140,12 +140,12 @@ const Dashboard = () => {
                  <Card className="bg-gradient-to-br from-green-200 to-green-300 text-green-800">
                     <div className="flex items-center space-x-4">
                         <div className="bg-white/40 p-3 rounded-full"><ArrowRightCircle size={24} /></div>
-                        <div onClick={() => setIsIncomeVisible(!isIncomeVisible)} className="cursor-pointer">
+                        <div onClick={() => setIsIncomeVisible(!isIncomeVisible)} className="cursor-pointer min-w-0">
                             <div className="flex items-center space-x-2">
                                 <p className="text-lg">Total Income</p>
                                 {isIncomeVisible ? <Eye size={20} /> : <EyeOff size={20} />}
                             </div>
-                            <p className="text-3xl font-bold">
+                            <p className="text-3xl font-bold break-words">
                                 {isIncomeVisible ? formatCurrency(totalIncome) : '******'}
                             </p>
                         </div>
@@ -154,12 +154,12 @@ const Dashboard = () => {
                 <Card className="bg-gradient-to-br from-red-200 to-red-300 text-red-800">
                     <div className="flex items-center space-x-4">
                         <div className="bg-white/40 p-3 rounded-full"><ArrowLeftCircle size={24} /></div>
-                        <div onClick={() => setIsExpenseVisible(!isExpenseVisible)} className="cursor-pointer">
+                        <div onClick={() => setIsExpenseVisible(!isExpenseVisible)} className="cursor-pointer min-w-0">
                             <div className="flex items-center space-x-2">
                                 <p className="text-lg">Total Expense</p>
                                 {isExpenseVisible ? <Eye size={20} /> : <EyeOff size={20} />}
                             </div>
-                            <p className="text-3xl font-bold">
+                            <p className="text-3xl font-bold break-words">
                                 {isExpenseVisible ? formatCurrency(totalExpense) : '******'}
                             </p>
                         </div>
@@ -170,12 +170,12 @@ const Dashboard = () => {
                         <div className="bg-white/40 p-3 rounded-full flex items-center justify-center w-12 h-12">
                             <span className="text-2xl font-bold">Rp</span>
                         </div>
-                        <div onClick={() => setIsBalanceVisible(!isBalanceVisible)} className="cursor-pointer">
+                        <div onClick={() => setIsBalanceVisible(!isBalanceVisible)} className="cursor-pointer min-w-0">
                             <div className="flex items-center space-x-2">
                                 <p className="text-lg">Balance</p>
                                 {isBalanceVisible ? <Eye size={20} /> : <EyeOff size={20} />}
                             </div>
-                            <p className="text-3xl font-bold">
+                            <p className="text-3xl font-bold break-words">
                                 {isBalanceVisible ? formatCurrency(balance) : '******'}
                             </p>
                         </div>
@@ -184,9 +184,9 @@ const Dashboard = () => {
                 <Card className="bg-gradient-to-br from-yellow-200 to-orange-300 text-yellow-800">
                     <div className="flex items-center space-x-4">
                         <div className="bg-white/40 p-3 rounded-full"><Bell size={24} /></div>
-                        <div>
+                        <div className="min-w-0">
                             <p className="text-lg">Upcoming Bills</p>
-                            <p className="text-3xl font-bold">{upcomingBills.length}</p>
+                            <p className="text-3xl font-bold break-words">{upcomingBills.length}</p>
                         </div>
                     </div>
                 </Card>
