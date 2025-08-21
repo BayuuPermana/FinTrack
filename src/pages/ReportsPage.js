@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Card from '../components/ui/Card';
@@ -10,12 +10,20 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement);
 
 const ReportsPage = () => {
-    const { transactions, loading } = useData();
+    const { transactions, accounts, loading } = useData();
     const { theme } = useTheme();
+    const [selectedAccountId, setSelectedAccountId] = useState('all');
+
+    const filteredTransactions = useMemo(() => {
+        if (selectedAccountId === 'all') {
+            return transactions;
+        }
+        return transactions.filter(t => t.accountId === selectedAccountId);
+    }, [transactions, selectedAccountId]);
 
     if (loading) return <Spinner />;
 
-    const monthlyData = transactions.reduce((acc, t) => {
+    const monthlyData = filteredTransactions.reduce((acc, t) => {
         const month = new Date(t.date).toLocaleString('default', { month: 'short', year: 'numeric' });
         if (!acc[month]) {
             acc[month] = { income: 0, expense: 0, name: month };
@@ -33,7 +41,7 @@ const ReportsPage = () => {
     const totalIncome = sortedMonths.reduce((acc, m) => acc + m.income, 0);
     const totalExpense = sortedMonths.reduce((acc, m) => acc + m.expense, 0);
 
-    const dailyExpenses = transactions
+    const dailyExpenses = filteredTransactions
         .filter(t => t.type === 'expense')
         .reduce((acc, t) => {
             const date = new Date(t.date).toLocaleDateString('en-CA'); // YYYY-MM-DD for sorting
@@ -206,7 +214,19 @@ const ReportsPage = () => {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Reports</h1>
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Reports</h1>
+                <select 
+                    value={selectedAccountId} 
+                    onChange={(e) => setSelectedAccountId(e.target.value)}
+                    className="block w-48 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                >
+                    <option value="all">All Accounts</option>
+                    {accounts.map(account => (
+                        <option key={account.id} value={account.id}>{account.name}</option>
+                    ))}
+                </select>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                     <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Monthly Cash Flow</h2>

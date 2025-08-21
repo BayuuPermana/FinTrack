@@ -128,7 +128,7 @@ const Dashboard = () => {
                 <select 
                     value={selectedAccountId} 
                     onChange={(e) => setSelectedAccountId(e.target.value)}
-                    className="block w-48 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                    className="block w-48 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 dark:text-white"
                 >
                     <option value="all">All Accounts</option>
                     {accounts.map(account => (

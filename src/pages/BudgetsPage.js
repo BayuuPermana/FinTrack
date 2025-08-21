@@ -8,12 +8,13 @@ import BudgetForm from '../components/forms/BudgetForm';
 import formatCurrency from '../utils/formatCurrency';
 import useModal from '../hooks/useModal';
 import PageHeader from '../components/ui/PageHeader';
-import { Edit, Trash2, Info } from 'lucide-react';
+import { Edit, Trash2, Info, RefreshCw } from 'lucide-react';
 
 const BudgetsPage = () => {
-    const { budgets, transactions, addBudget, updateBudget, deleteBudget, loading } = useData();
+    const { budgets, transactions, addBudget, updateBudget, deleteBudget, resetBudgets, loading } = useData();
     const { isOpen: isModalOpen, modalData: editingBudget, openModal, closeModal } = useModal();
     const { isOpen: isConfirmOpen, modalData: deletingId, openModal: openConfirmModal, closeModal: closeConfirmModal } = useModal();
+    const { isOpen: isResetConfirmOpen, openModal: openResetConfirmModal, closeModal: closeResetConfirmModal } = useModal();
 
     const monthlySpending = useMemo(() => {
         const spending = {};
@@ -51,13 +52,26 @@ const BudgetsPage = () => {
         closeConfirmModal();
     };
 
+    const handleResetBudgets = async () => {
+        await resetBudgets();
+        closeResetConfirmModal();
+    };
+
     return (
         <div className="space-y-6">
             <PageHeader 
                 title="Budgets"
                 buttonText="Add Budget"
                 onButtonClick={() => openModal()}
-            />
+            >
+                <button 
+                    onClick={() => openResetConfirmModal()}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                    <RefreshCw size={16} />
+                    Reset Budgets
+                </button>
+            </PageHeader>
 
             <Modal isOpen={isModalOpen} onClose={closeModal} title={editingBudget ? "Edit Budget" : "Add Budget"}>
                 <BudgetForm budget={editingBudget} onSave={handleSaveBudget} onCancel={closeModal} />
@@ -68,6 +82,13 @@ const BudgetsPage = () => {
                 onConfirm={handleDelete}
                 title="Delete Budget"
                 message="Are you sure you want to delete this budget? This action cannot be undone."
+            />
+            <ConfirmModal 
+                isOpen={isResetConfirmOpen}
+                onClose={closeResetConfirmModal}
+                onConfirm={handleResetBudgets}
+                title="Reset Budgets"
+                message="Are you sure you want to reset all budget amounts to zero for the new month? This action cannot be undone."
             />
 
             {loading ? <Spinner /> : (
