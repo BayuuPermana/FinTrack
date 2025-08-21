@@ -19,7 +19,7 @@ const SettingsPage = () => {
                         <p className="text-gray-600 dark:text-gray-300">
                             You are logged in with User ID:
                         </p>
-                        <p className="font-mono text-sm bg-gray-100 dark:bg-gray-700 p-2 rounded-md mt-2 break-all">
+                        <p className="font-mono text-sm bg-gray-100 dark:bg-gray-700 dark:text-gray-200 p-2 rounded-md mt-2 break-all">
                             {user.uid}
                         </p>
                          <p className="text-gray-500 dark:text-gray-400 mt-2 text-xs">

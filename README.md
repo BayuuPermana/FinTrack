@@ -36,8 +36,7 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 ### Prerequisites
 
-*   [Node.js](https://nodejs.org/) (v16 or later)
-*   [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+*   [Bun](https://bun.sh/)
 *   A Google account to create a Firebase project.
 
 ### Installation & Setup
@@ -50,11 +49,7 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 2.  **Install dependencies:**
     ```sh
-    npm install
-    ```
-    or
-    ```sh
-    yarn install
+    bun install
     ```
 
 3.  **Set up Firebase:**
@@ -81,7 +76,7 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 4.  **Run the development server:**
     ```sh
-    npm start
+    bun start
     ```
     The application should now be running on [http://localhost:3000](http://localhost:3000).
 
@@ -108,7 +103,7 @@ The project follows a standard Create React App structure, with application-spec
 To create a production-ready build of the app, run:
 
 ```sh
-npm run build
+bun run build
 ```
 
 This will create a `build` folder with optimized, static assets that can be deployed to any static site hosting service like Vercel, Netlify, or Firebase Hosting.

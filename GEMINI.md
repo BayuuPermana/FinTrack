@@ -1,4 +1,3 @@
-
 # GEMINI.md - FinTrack Project Context
 
 ## Project Overview
@@ -19,23 +18,23 @@ The application is structured as a single-page application (SPA) with a sidebar 
 
 The project uses `react-scripts` (from Create React App) for its build scripts. The following commands are available in `package.json`:
 
-*   **`npm start`**: Starts the development server at `http://localhost:3000`.
-*   **`npm run build`**: Builds the application for production.
-*   **`npm test`**: Runs the test suite.
-*   **`npm run eject`**: Ejects from Create React App's configuration.
+*   **`bun start`**: Starts the development server at `http://localhost:3000`.
+*   **`bun run build`**: Builds the application for production.
+*   **`bun test`**: Runs the test suite.
+*   **`bun run eject`**: Ejects from Create React App's configuration.
 
 ### Development Setup
 
 1.  **Install Dependencies:**
     ```bash
-    npm install
+    bun install
     ```
 2.  **Configure Firebase:**
     *   The Firebase configuration is located in `src/firebase/config.js`.
     *   To run the application, you will need to replace the placeholder Firebase configuration with your own project's credentials.
 3.  **Run the Application:**
     ```bash
-    npm start
+    bun start
     ```
 
 ## Development Conventions
