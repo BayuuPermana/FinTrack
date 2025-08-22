@@ -2,20 +2,17 @@ import React, { useState, useEffect } from 'react';
 
 const AccountForm = ({ onSave, onCancel, account }) => {
     const [name, setName] = useState('');
-    const [balance, setBalance] = useState('');
 
     useEffect(() => {
         if (account) {
             setName(account.name);
-            setBalance(account.balance);
         }
     }, [account]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave({ name, balance: parseFloat(balance) });
+        onSave({ name, balance: 0 });
         setName('');
-        setBalance('');
     };
 
     return (
@@ -27,17 +24,6 @@ const AccountForm = ({ onSave, onCancel, account }) => {
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm dark:text-white"
-                    required
-                />
-            </div>
-            <div>
-                <label htmlFor="balance" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Initial Balance</label>
-                <input
-                    type="number"
-                    id="balance"
-                    value={balance}
-                    onChange={(e) => setBalance(e.target.value)}
                     className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm dark:text-white"
                     required
                 />

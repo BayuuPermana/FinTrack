@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, query, writeBatch } from 'firebase/firestore';
+import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, query, writeBatch, getDoc } from 'firebase/firestore';
 import { db, appId } from '../firebase/config';
 import { useAuth } from './AuthContext';
 
@@ -14,6 +14,13 @@ export const DataProvider = ({ children }) => {
     const [budgets, setBudgets] = useState([]);
     const [savings, setSavings] = useState([]);
     const [accounts, setAccounts] = useState([]);
+    const [expenseCategories, setExpenseCategories] = useState([
+        'Food', 'Transportation', 'Housing', 'Utilities', 'Entertainment', 
+        'Health', 'Personal Care', 'Education', 'Shopping', 'Other'
+    ]);
+    const [incomeCategories, setIncomeCategories] = useState([
+        'Salary', 'Freelance', 'Investment', 'Gift', 'Other'
+    ]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -92,8 +99,9 @@ export const DataProvider = ({ children }) => {
         batch.set(transactionRef, transaction);
 
         const accountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, transaction.accountId);
-        const account = accounts.find(a => a.id === transaction.accountId);
-        const newBalance = transaction.type === 'income' ? account.balance + transaction.amount : account.balance - transaction.amount;
+        const accountSnap = await getDoc(accountRef);
+        const currentAccountBalance = accountSnap.exists() ? accountSnap.data().balance : 0;
+        const newBalance = transaction.type === 'income' ? currentAccountBalance + transaction.amount : currentAccountBalance - transaction.amount;
         batch.update(accountRef, { balance: newBalance });
 
         await batch.commit();
@@ -104,21 +112,20 @@ export const DataProvider = ({ children }) => {
         if (!user) return;
         const batch = writeBatch(db);
         const transactionRef = doc(db, `artifacts/${appId}/users/${user.uid}/transactions`, id);
+        batch.update(transactionRef, updatedTransaction);
+
         const oldTransaction = transactions.find(t => t.id === id);
 
-        // Revert old transaction amount
-        const oldAccountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, oldTransaction.accountId);
-        const oldAccount = accounts.find(a => a.id === oldTransaction.accountId);
-        const revertedBalance = oldTransaction.type === 'income' ? oldAccount.balance - oldTransaction.amount : oldAccount.balance + oldTransaction.amount;
-        batch.update(oldAccountRef, { balance: revertedBalance });
+        const accountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, updatedTransaction.accountId);
+        const accountSnap = await getDoc(accountRef);
+        let currentAccountBalance = accountSnap.exists() ? accountSnap.data().balance : 0;
 
-        // Apply new transaction amount
-        const newAccountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, updatedTransaction.accountId);
-        const newAccount = accounts.find(a => a.id === updatedTransaction.accountId);
-        const newBalance = updatedTransaction.type === 'income' ? newAccount.balance + updatedTransaction.amount : newAccount.balance - updatedTransaction.amount;
-        batch.update(newAccountRef, { balance: newBalance });
+        // Revert old transaction's impact
+        currentAccountBalance = oldTransaction.type === 'income' ? currentAccountBalance - oldTransaction.amount : currentAccountBalance + oldTransaction.amount;
 
-        batch.update(transactionRef, updatedTransaction);
+        // Apply new transaction's impact
+        const newBalance = updatedTransaction.type === 'income' ? currentAccountBalance + updatedTransaction.amount : currentAccountBalance - updatedTransaction.amount;
+        batch.update(accountRef, { balance: newBalance });
 
         await batch.commit();
     };
@@ -128,13 +135,14 @@ export const DataProvider = ({ children }) => {
         const batch = writeBatch(db);
         const transactionRef = doc(db, `artifacts/${appId}/users/${user.uid}/transactions`, id);
         const transaction = transactions.find(t => t.id === id);
+        batch.delete(transactionRef);
 
         const accountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, transaction.accountId);
-        const account = accounts.find(a => a.id === transaction.accountId);
-        const newBalance = transaction.type === 'income' ? account.balance - transaction.amount : account.balance + transaction.amount;
+        const accountSnap = await getDoc(accountRef);
+        const currentAccountBalance = accountSnap.exists() ? accountSnap.data().balance : 0;
+        const newBalance = transaction.type === 'income' ? currentAccountBalance - transaction.amount : currentAccountBalance + transaction.amount;
         batch.update(accountRef, { balance: newBalance });
 
-        batch.delete(transactionRef);
         await batch.commit();
     };
 
@@ -150,7 +158,9 @@ export const DataProvider = ({ children }) => {
     const addSavings = createItem('savings');
     const updateSavings = updateItem('savings');
     const deleteSavings = deleteItem('savings');
+    
     const addAccount = createItem('accounts');
+
     const updateAccount = updateItem('accounts');
     
     const deleteAccount = async (id) => {
@@ -222,7 +232,7 @@ export const DataProvider = ({ children }) => {
     };
 
     const value = { 
-        transactions, goals, bills, budgets, savings, accounts,
+        transactions, goals, bills, budgets, savings, accounts, expenseCategories, incomeCategories,
         addTransaction, updateTransaction, deleteTransaction, 
         addGoal, updateGoal, deleteGoal, addFundsToGoal,
         addBill, updateBill, deleteBill, toggleBillPaidStatus,

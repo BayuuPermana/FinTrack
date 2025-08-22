@@ -56,9 +56,17 @@ const App = () => {
     return (
         <AuthProvider>
             <DataProvider>
-                <div className={`${theme} font-sans flex min-h-screen w-full`}>
+                <div className={`${theme} font-sans flex min-h-screen w-full bg-gray-50 dark:bg-gray-900`}>
+                    {/* Sidebar Backdrop */}
+                    {isSidebarOpen && (
+                        <div 
+                            onClick={() => setSidebarOpen(false)} 
+                            className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden transition-opacity duration-300 ease-in-out"
+                        ></div>
+                    )}
+
                     {/* Sidebar */}
-                    <aside className={`fixed z-30 inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white dark:bg-gray-800 ${isSidebarCollapsed ? 'w-24' : 'w-64'} flex flex-col border-r border-gray-200 dark:border-gray-700`}>
+                    <aside className={`fixed z-30 inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white dark:bg-gray-800 ${isSidebarCollapsed ? 'w-24' : 'w-64'} flex flex-col border-r border-gray-200 dark:border-gray-700 shrink-0`}>
                         <button onClick={() => setSidebarCollapsed(!isSidebarCollapsed)} className={`hidden md:flex items-center w-full p-4 h-16 shrink-0 focus:outline-none text-left ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
                             <div className={`flex items-center overflow-hidden transition-all duration-300 ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
                                 <div className="p-2 bg-sky-500 rounded-lg flex items-center justify-center w-10 h-10 shrink-0">
@@ -92,7 +100,7 @@ const App = () => {
                     </aside>
 
                     {/* Main Content */}
-                    <main className="flex-1 flex flex-col gap-6 p-4 md:p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+                    <main className={`flex-1 flex flex-col gap-6 p-4 md:p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
                         <div className="md:hidden flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
                             <div className="flex items-center space-x-3">
                                 <div className="p-2 bg-sky-500 rounded-lg flex items-center justify-center w-10 h-10">

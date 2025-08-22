@@ -5,14 +5,9 @@ const BudgetForm = ({ budget, onSave, onCancel }) => {
     const [name, setName] = useState('');
     const [limit, setLimit] = useState('');
     const [category, setCategory] = useState('');
-    const { transactions } = useData();
+    const { transactions, expenseCategories } = useData();
 
-    const expenseCategories = useMemo(() => {
-        const categories = transactions
-            .filter(t => t.type === 'expense')
-            .map(t => t.category);
-        return [...new Set(categories)]; // Get unique categories
-    }, [transactions]);
+    
 
     useEffect(() => {
         if (budget) {

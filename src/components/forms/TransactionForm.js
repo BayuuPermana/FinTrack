@@ -8,7 +8,7 @@ const TransactionForm = ({ transaction, onSave, onCancel }) => {
     const [description, setDescription] = useState('');
     const [category, setCategory] = useState('');
     const [accountId, setAccountId] = useState('');
-    const { accounts } = useData();
+    const { accounts, expenseCategories, incomeCategories } = useData();
 
     useEffect(() => {
         if (transaction) {
@@ -27,6 +27,10 @@ const TransactionForm = ({ transaction, onSave, onCancel }) => {
             setAccountId(accounts.length > 0 ? accounts[0].id : '');
         }
     }, [transaction, accounts]);
+
+    useEffect(() => {
+        setCategory('');
+    }, [type]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -82,14 +86,18 @@ const TransactionForm = ({ transaction, onSave, onCancel }) => {
             </div>
             <div>
                 <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Category</label>
-                <input
-                    type="text"
+                <select
                     id="category"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
                     required
-                />
+                >
+                    <option value="" disabled>Select a category</option>
+                    {(type === 'income' ? incomeCategories : expenseCategories).map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                </select>
             </div>
             <div>
                 <label htmlFor="accountId" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Account</label>
