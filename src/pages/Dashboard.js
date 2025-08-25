@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useTheme } from '../contexts/ThemeContext';
-import Spinner from '../components/ui/Spinner';
+
 import Card from '../components/ui/Card';
 import formatCurrency from '../utils/formatCurrency';
 import { Pie } from 'react-chartjs-2';
@@ -119,7 +119,7 @@ const Dashboard = () => {
         }
     }), [theme]);
 
-    if (loading) return <Spinner />;
+    
 
     return (
         <div className="space-y-6">

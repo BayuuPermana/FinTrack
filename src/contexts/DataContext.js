@@ -17,62 +17,42 @@ export const DataProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (user) {
-            setLoading(true);
-            const collections = {
-                transactions: collection(db, `artifacts/${appId}/users/${user.uid}/transactions`),
-                goals: collection(db, `artifacts/${appId}/users/${user.uid}/goals`),
-                bills: collection(db, `artifacts/${appId}/users/${user.uid}/bills`),
-                budgets: collection(db, `artifacts/${appId}/users/${user.uid}/budgets`),
-                savings: collection(db, `artifacts/${appId}/users/${user.uid}/savings`),
-                accounts: collection(db, `artifacts/${appId}/users/${user.uid}/accounts`),
-            };
+        if (transactions.length > 0 && accounts.length > 0) {
+            const batch = writeBatch(db);
+            const accountsToUpdate = {};
 
-            const unsubscribes = Object.entries(collections).map(([name, coll]) => {
-                const q = query(coll);
-                return onSnapshot(q, (snapshot) => {
-                    const data = snapshot.docs.map(doc => {
-                        const docData = doc.data();
-                        const convertedData = Object.keys(docData).reduce((acc, key) => {
-                            if (docData[key]?.toDate) {
-                                acc[key] = docData[key].toDate();
-                            } else {
-                                acc[key] = docData[key];
-                            }
-                            return acc;
-                        }, {});
-                        return { id: doc.id, ...convertedData };
-                    });
-
-                    switch (name) {
-                        case 'transactions': setTransactions(data); break;
-                        case 'goals': setGoals(data); break;
-                        case 'bills': setBills(data); break;
-                        case 'budgets': setBudgets(data); break;
-                        case 'savings': setSavings(data); break;
-                        case 'accounts': setAccounts(data); break;
-                        default: break;
-                    }
-                }, error => console.error(`Error fetching ${name}:`, error));
+            accounts.forEach(account => {
+                accountsToUpdate[account.id] = { ...account, balance: 0 };
             });
-            
-            setLoading(false);
-            return () => unsubscribes.forEach(unsub => unsub());
-        } else {
-            setTransactions([]);
-            setGoals([]);
-            setBills([]);
-            setBudgets([]);
-            setSavings([]);
-            setAccounts([]);
-            setLoading(false);
+
+            transactions.forEach(transaction => {
+                if (accountsToUpdate[transaction.accountId]) {
+                    if (transaction.type === 'income') {
+                        accountsToUpdate[transaction.accountId].balance += transaction.amount;
+                    } else {
+                        accountsToUpdate[transaction.accountId].balance -= transaction.amount;
+                    }
+                }
+            });
+
+            Object.values(accountsToUpdate).forEach(account => {
+                const accountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, account.id);
+                batch.update(accountRef, { balance: account.balance });
+            });
+
+            batch.commit().catch(error => console.error("Error updating account balances:", error));
         }
-    }, [user]);
+    }, [transactions, accounts, user, appId]);
 
     const createItem = (collectionName) => async (item) => {
         if (!user) return;
-        const docRef = await addDoc(collection(db, `artifacts/${appId}/users/${user.uid}/${collectionName}`), item);
-        return docRef.id;
+        try {
+            const docRef = await addDoc(collection(db, `artifacts/${appId}/users/${user.uid}/${collectionName}`), item);
+            return docRef.id;
+        } catch (error) {
+            console.error("Error creating item in ", collectionName, error);
+            throw error;
+        }
     };
 
     const updateItem = (collectionName) => async (id, updatedItem) => {
@@ -85,20 +65,7 @@ export const DataProvider = ({ children }) => {
         await deleteDoc(doc(db, `artifacts/${appId}/users/${user.uid}/${collectionName}`, id));
     };
 
-    const addTransaction = async (transaction) => {
-        if (!user) return;
-        const batch = writeBatch(db);
-        const transactionRef = doc(collection(db, `artifacts/${appId}/users/${user.uid}/transactions`));
-        batch.set(transactionRef, transaction);
-
-        const accountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, transaction.accountId);
-        const account = accounts.find(a => a.id === transaction.accountId);
-        const newBalance = transaction.type === 'income' ? account.balance + transaction.amount : account.balance - transaction.amount;
-        batch.update(accountRef, { balance: newBalance });
-
-        await batch.commit();
-        return transactionRef.id;
-    };
+    const addTransaction = createItem('transactions');
 
     const updateTransaction = async (id, updatedTransaction) => {
         if (!user) return;

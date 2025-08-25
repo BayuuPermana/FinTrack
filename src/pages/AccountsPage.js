@@ -1,7 +1,7 @@
 import React from 'react';
 import { useData } from '../contexts/DataContext';
 import Card from '../components/ui/Card';
-import Spinner from '../components/ui/Spinner';
+
 import Modal from '../components/ui/Modal';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import AccountForm from '../components/forms/AccountForm';
@@ -50,8 +50,7 @@ const AccountsPage = () => {
                 message="Are you sure you want to delete this account? This action cannot be undone."
             />
 
-            {loading ? <Spinner /> : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {accounts.length > 0 ? accounts.map(account => (
                         <Card key={account.id} className="flex flex-col justify-between">
                             <div>
@@ -73,7 +72,6 @@ const AccountsPage = () => {
                         </div>
                     )}
                 </div>
-            )}
         </div>
     );
 };

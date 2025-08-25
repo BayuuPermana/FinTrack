@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import Card from '../components/ui/Card';
-import Spinner from '../components/ui/Spinner';
+
 import Modal from '../components/ui/Modal';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import BudgetForm from '../components/forms/BudgetForm';
@@ -91,8 +91,7 @@ const BudgetsPage = () => {
                 message="Are you sure you want to reset all budget amounts to zero for the new month? This action cannot be undone."
             />
 
-            {loading ? <Spinner /> : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {budgets.length > 0 ? budgets.map(budget => {
                         const spentAmount = monthlySpending[budget.id] || 0;
                         const progress = budget.limit > 0 ? (spentAmount / budget.limit) * 100 : 0;
@@ -133,7 +132,6 @@ const BudgetsPage = () => {
                         </div>
                     )}
                 </div>
-            )}
         </div>
     );
 };

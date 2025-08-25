@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
 const AuthContext = createContext(null);
@@ -10,24 +10,32 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const attemptSignIn = async () => {
-            try {
-                if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
-                    await signInWithCustomToken(auth, window.__initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Authentication Error:", error);
-            }
-        };
-
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
+            if (currentUser) {
+                setUser(currentUser);
+                // Store user in local storage to persist session
+                localStorage.setItem('authUser', JSON.stringify(currentUser));
+            } else {
+                // Clear user from local storage on sign out
+                localStorage.removeItem('authUser');
+                setUser(null);
+            }
             setLoading(false);
         });
 
-        attemptSignIn();
+        // Check for persisted user in local storage
+        const persistedUser = localStorage.getItem('authUser');
+        if (persistedUser) {
+            setUser(JSON.parse(persistedUser));
+            setLoading(false);
+        } else {
+            // If no persisted user, sign in anonymously
+            signInAnonymously(auth).catch(error => {
+                console.error("Anonymous sign-in error:", error);
+                setLoading(false);
+            });
+        }
+
         return () => unsubscribe();
     }, []);
 

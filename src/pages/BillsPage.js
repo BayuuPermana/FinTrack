@@ -1,7 +1,7 @@
 import React from 'react';
 import { useData } from '../contexts/DataContext';
 import Card from '../components/ui/Card';
-import Spinner from '../components/ui/Spinner';
+
 import Modal from '../components/ui/Modal';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import BillForm from '../components/forms/BillForm';
@@ -64,8 +64,7 @@ const BillsPage = () => {
                 message="Are you sure you want to delete this bill? This action cannot be undone."
             />
 
-            {loading ? <Spinner /> : (
-                <div className="space-y-8">
+            <div className="space-y-8">
                     <Card>
                         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Upcoming Bills</h2>
                         {upcomingBills.length > 0 ? (
@@ -117,7 +116,6 @@ const BillsPage = () => {
                         ) : <p className="text-center text-gray-500 dark:text-gray-400 py-8">No paid bills recorded yet.</p>}
                     </Card>
                 </div>
-            )}
         </div>
     );
 };
