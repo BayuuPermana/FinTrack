@@ -65,8 +65,7 @@ const GoalsPage = () => {
                 message="Are you sure you want to delete this goal? This action cannot be undone."
             />
 
-            {loading ? <Spinner /> : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {goals.length > 0 ? goals.map(goal => {
                         const progress = goal.targetAmount > 0 ? ((goal.currentAmount || 0) / goal.targetAmount) * 100 : 0;
                         return (
@@ -103,7 +102,6 @@ const GoalsPage = () => {
                         </Card>
                     )}
                 </div>
-            )}
         </div>
     );
 };

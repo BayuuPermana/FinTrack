@@ -1,7 +1,7 @@
 import React from 'react';
 import { useData } from '../contexts/DataContext';
 import Card from '../components/ui/Card';
-import Spinner from '../components/ui/Spinner';
+
 import Modal from '../components/ui/Modal';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import SavingsForm from '../components/forms/SavingsForm';
@@ -56,8 +56,7 @@ const SavingsPage = () => {
                 message="Are you sure you want to delete this savings account? This action cannot be undone."
             />
 
-            {loading ? <Spinner /> : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {savings && savings.length > 0 ? savings.map(account => {
                         const progress = account.targetAmount > 0 ? (account.currentAmount / account.targetAmount) * 100 : 0;
                         return (
@@ -105,7 +104,6 @@ const SavingsPage = () => {
                         </Card>
                     )}
                 </div>
-            )}
         </div>
     );
 };

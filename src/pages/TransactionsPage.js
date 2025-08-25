@@ -1,7 +1,7 @@
 import React from 'react';
 import { useData } from '../contexts/DataContext';
 import Card from '../components/ui/Card';
-import Spinner from '../components/ui/Spinner';
+
 import Modal from '../components/ui/Modal';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import TransactionForm from '../components/forms/TransactionForm';
@@ -58,8 +58,7 @@ const TransactionsPage = () => {
             />
 
             <Card>
-                {loading ? <Spinner /> : (
-                    <div className="overflow-x-auto">
+                <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="border-b border-gray-200 dark:border-gray-700">
                                 <tr>
@@ -104,7 +103,6 @@ const TransactionsPage = () => {
                             </tbody>
                         </table>
                     </div>
-                )}
             </Card>
         </div>
     );

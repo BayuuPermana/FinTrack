@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Card from '../components/ui/Card';
-import Spinner from '../components/ui/Spinner';
+
 import formatCurrency from '../utils/formatCurrency';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement } from 'chart.js';
@@ -21,7 +21,7 @@ const ReportsPage = () => {
         return transactions.filter(t => t.accountId === selectedAccountId);
     }, [transactions, selectedAccountId]);
 
-    if (loading) return <Spinner />;
+    
 
     const monthlyData = filteredTransactions.reduce((acc, t) => {
         const month = new Date(t.date).toLocaleString('default', { month: 'short', year: 'numeric' });

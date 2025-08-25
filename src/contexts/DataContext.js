@@ -17,32 +17,44 @@ export const DataProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (transactions.length > 0 && accounts.length > 0) {
-            const batch = writeBatch(db);
-            const accountsToUpdate = {};
-
-            accounts.forEach(account => {
-                accountsToUpdate[account.id] = { ...account, balance: 0 };
-            });
-
-            transactions.forEach(transaction => {
-                if (accountsToUpdate[transaction.accountId]) {
-                    if (transaction.type === 'income') {
-                        accountsToUpdate[transaction.accountId].balance += transaction.amount;
-                    } else {
-                        accountsToUpdate[transaction.accountId].balance -= transaction.amount;
-                    }
-                }
-            });
-
-            Object.values(accountsToUpdate).forEach(account => {
-                const accountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, account.id);
-                batch.update(accountRef, { balance: account.balance });
-            });
-
-            batch.commit().catch(error => console.error("Error updating account balances:", error));
+        if (!user) {
+            setTransactions([]);
+            setGoals([]);
+            setBills([]);
+            setBudgets([]);
+            setSavings([]);
+            setAccounts([]);
+            setLoading(false);
+            return;
         }
-    }, [transactions, accounts, user, appId]);
+
+        setLoading(true);
+
+        const collections = {
+            transactions: setTransactions,
+            goals: setGoals,
+            bills: setBills,
+            budgets: setBudgets,
+            savings: setSavings,
+            accounts: setAccounts,
+        };
+
+        const unsubscribes = Object.entries(collections).map(([name, setter]) => {
+            const q = query(collection(db, `artifacts/${appId}/users/${user.uid}/${name}`));
+            return onSnapshot(q, (snapshot) => {
+                const items = snapshot.docs.map(doc => ({ 
+                    id: doc.id, 
+                    ...doc.data(),
+                    date: doc.data().date?.toDate ? doc.data().date.toDate() : (doc.data().date ? new Date(doc.data().date) : null)
+                }));
+                setter(items);
+            });
+        });
+
+        setLoading(false);
+
+        return () => unsubscribes.forEach(unsub => unsub());
+    }, [user, appId]);
 
     const createItem = (collectionName) => async (item) => {
         if (!user) return;
