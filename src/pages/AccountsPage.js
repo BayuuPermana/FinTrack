@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useData } from '../contexts/DataContext';
 import Card from '../components/ui/Card';
 
@@ -11,20 +11,9 @@ import PageHeader from '../components/ui/PageHeader';
 import { Edit, Trash2, Info } from 'lucide-react';
 
 const AccountsPage = () => {
-    const { accounts, transactions, addAccount, updateAccount, deleteAccount, loading } = useData();
+    const { accounts, addAccount, updateAccount, deleteAccount, loading } = useData();
     const { isOpen: isModalOpen, modalData: editingAccount, openModal, closeModal } = useModal();
     const { isOpen: isConfirmOpen, modalData: deletingId, openModal: openConfirmModal, closeModal: closeConfirmModal } = useModal();
-
-    const accountBalances = useMemo(() => {
-        const balances = {};
-        accounts.forEach(account => {
-            const accountTransactions = transactions.filter(t => t.accountId === account.id);
-            const income = accountTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-            const expense = accountTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-            balances[account.id] = account.balance + income - expense;
-        });
-        return balances;
-    }, [accounts, transactions]);
 
     const handleSaveAccount = async (account) => {
         if (editingAccount) {
@@ -72,7 +61,7 @@ const AccountsPage = () => {
                                         <button onClick={() => openConfirmModal(account.id)} className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"><Trash2 size={18} /></button>
                                     </div>
                                 </div>
-                                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{formatCurrency(accountBalances[account.id] ?? account.balance)}</p>
+                                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{formatCurrency(account.balance)}</p>
                             </div>
                         </Card>
                     )) : (
