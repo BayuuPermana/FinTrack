@@ -77,7 +77,19 @@ export const DataProvider = ({ children }) => {
         await deleteDoc(doc(db, `artifacts/${appId}/users/${user.uid}/${collectionName}`, id));
     };
 
-    const addTransaction = createItem('transactions');
+    const addTransaction = async (transaction) => {
+        if (!user) return;
+        const batch = writeBatch(db);
+        const transactionRef = doc(collection(db, `artifacts/${appId}/users/${user.uid}/transactions`));
+        
+        const accountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, transaction.accountId);
+        const account = accounts.find(a => a.id === transaction.accountId);
+        const newBalance = transaction.type === 'income' ? account.balance + transaction.amount : account.balance - transaction.amount;
+        batch.update(accountRef, { balance: newBalance });
+
+        batch.set(transactionRef, transaction);
+        await batch.commit();
+    };
 
     const updateTransaction = async (id, updatedTransaction) => {
         if (!user) return;

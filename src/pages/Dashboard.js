@@ -59,13 +59,11 @@ const Dashboard = () => {
     
     const balance = useMemo(() => {
         if (selectedAccountId === 'all') {
-            const initialBalances = accounts.reduce((acc, account) => acc + (account.balance || 0), 0);
-            return initialBalances + totalIncome - totalExpense;
+            return accounts.reduce((acc, account) => acc + (account.balance || 0), 0);
         }
         const selectedAccount = accounts.find(a => a.id === selectedAccountId);
-        const initialBalance = selectedAccount ? selectedAccount.balance : 0;
-        return initialBalance + totalIncome - totalExpense;
-    }, [accounts, totalIncome, totalExpense, selectedAccountId]);
+        return selectedAccount ? selectedAccount.balance : 0;
+    }, [accounts, selectedAccountId]);
 
     const expenseByCategory = useMemo(() => 
         filteredTransactions
