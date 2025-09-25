@@ -84,7 +84,9 @@ export const DataProvider = ({ children }) => {
         
         const accountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, transaction.accountId);
         const account = accounts.find(a => a.id === transaction.accountId);
-        const newBalance = transaction.type === 'income' ? account.balance + transaction.amount : account.balance - transaction.amount;
+        const currentBalance = parseFloat(account.balance) || 0;
+        const transactionAmount = parseFloat(transaction.amount) || 0;
+        const newBalance = transaction.type === 'income' ? currentBalance + transactionAmount : currentBalance - transactionAmount;
         batch.update(accountRef, { balance: newBalance });
 
         batch.set(transactionRef, transaction);
@@ -97,20 +99,38 @@ export const DataProvider = ({ children }) => {
         const transactionRef = doc(db, `artifacts/${appId}/users/${user.uid}/transactions`, id);
         const oldTransaction = transactions.find(t => t.id === id);
 
-        // Revert old transaction amount
-        const oldAccountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, oldTransaction.accountId);
-        const oldAccount = accounts.find(a => a.id === oldTransaction.accountId);
-        const revertedBalance = oldTransaction.type === 'income' ? oldAccount.balance - oldTransaction.amount : oldAccount.balance + oldTransaction.amount;
-        batch.update(oldAccountRef, { balance: revertedBalance });
+        const oldTransactionAmount = parseFloat(oldTransaction.amount) || 0;
+        const updatedTransactionAmount = parseFloat(updatedTransaction.amount) || 0;
 
-        // Apply new transaction amount
-        const newAccountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, updatedTransaction.accountId);
-        const newAccount = accounts.find(a => a.id === updatedTransaction.accountId);
-        const newBalance = updatedTransaction.type === 'income' ? newAccount.balance + updatedTransaction.amount : newAccount.balance - updatedTransaction.amount;
-        batch.update(newAccountRef, { balance: newBalance });
+        // If account is the same
+        if (oldTransaction.accountId === updatedTransaction.accountId) {
+            const accountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, oldTransaction.accountId);
+            const account = accounts.find(a => a.id === oldTransaction.accountId);
+            const currentBalance = parseFloat(account.balance) || 0;
+
+            // Revert old transaction
+            const balanceAfterRevert = oldTransaction.type === 'income' ? currentBalance - oldTransactionAmount : currentBalance + oldTransactionAmount;
+            // Apply new transaction
+            const newBalance = updatedTransaction.type === 'income' ? balanceAfterRevert + updatedTransactionAmount : balanceAfterRevert - updatedTransactionAmount;
+
+            batch.update(accountRef, { balance: newBalance });
+        } else { // If account has changed
+            // Revert old transaction from old account
+            const oldAccountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, oldTransaction.accountId);
+            const oldAccount = accounts.find(a => a.id === oldTransaction.accountId);
+            const oldAccountBalance = parseFloat(oldAccount.balance) || 0;
+            const revertedBalance = oldTransaction.type === 'income' ? oldAccountBalance - oldTransactionAmount : oldAccountBalance + oldTransactionAmount;
+            batch.update(oldAccountRef, { balance: revertedBalance });
+
+            // Apply new transaction to new account
+            const newAccountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, updatedTransaction.accountId);
+            const newAccount = accounts.find(a => a.id === updatedTransaction.accountId);
+            const newAccountBalance = parseFloat(newAccount.balance) || 0;
+            const newBalance = updatedTransaction.type === 'income' ? newAccountBalance + updatedTransactionAmount : newAccountBalance - updatedTransactionAmount;
+            batch.update(newAccountRef, { balance: newBalance });
+        }
 
         batch.update(transactionRef, updatedTransaction);
-
         await batch.commit();
     };
 
@@ -122,7 +142,9 @@ export const DataProvider = ({ children }) => {
 
         const accountRef = doc(db, `artifacts/${appId}/users/${user.uid}/accounts`, transaction.accountId);
         const account = accounts.find(a => a.id === transaction.accountId);
-        const newBalance = transaction.type === 'income' ? account.balance - transaction.amount : account.balance + transaction.amount;
+        const currentBalance = parseFloat(account.balance) || 0;
+        const transactionAmount = parseFloat(transaction.amount) || 0;
+        const newBalance = transaction.type === 'income' ? currentBalance - transactionAmount : currentBalance + transactionAmount;
         batch.update(accountRef, { balance: newBalance });
 
         batch.delete(transactionRef);
