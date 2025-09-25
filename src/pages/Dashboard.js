@@ -75,7 +75,7 @@ const Dashboard = () => {
     [filteredTransactions]);
 
     const recentTransactions = useMemo(() => 
-        [...filteredTransactions].sort((a, b) => b.date - a.date).slice(0, 4),
+        [...filteredTransactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 4),
     [filteredTransactions]);
 
     const upcomingBills = useMemo(() => 
